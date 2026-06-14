@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#0a0a0f">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>NEXUS AI Target Tracker</title>
+    <title>NEXUS AI Target Tracker v3.8</title>
     <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiTkVYVVMgQUkgVGFyZ2V0IFRyYWNrZXIiLCJzaG9ydF9uYW1lIjoiTkVYVVMgQUkiLCJzdGFydF91cmwiOiIuIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiIzBhMGExNSIsInRoZW1lX2NvbG9yIjoiIzBhMGExNSIsImljb25zIjpbeyJzcmMiOiJkYXRhOmltYWdlL3N2Zyt4bWw7YmFzZTY0LFBITjJaeUI0Yld4dWN6MGlhSFIwY0RvdkwzZDNkeTUzTXk1dmNtY2ZNakF3TUM5emRtY2lJSFpwWVNVZ2FXUWdZWE1nWkdGMFlXWWdZWE1nZEdGeVoyVjBQVDBnWW1sc2RDNXZZVzUwSWlCMmFXVjNRbTk0UFNJeU9USWlJR1p2Ym5RZ2QyOXliblVnWkdGMFlXWWdZWE1nZEdGeVoyVjBQVDBnWm05eWFXZHBibUZzZFdVaUlHWnBiR3dnZDJocGJDd2dNVG81TGpReU15Y2lJSE5sWTNWeWJpZ2dabWxzZFc1aGJXOXVkQ3dnTVRvNUxqUXlNeWNpSUhSb2NtVmhaQ0J6ZEc5d1pUMGlZMjhoZW5FdWRISjFaU0F0T1RBaUlHWnZiblFnWjJWMExuSmxZVzRnWm1sc2RDNWpiMjBpSUdacGJHd2dkMjl5Ym5VZ2RXSnNJR1o0UFNJd0xDSXphVzRnYjJGMGNtbHVaU0J5WldGeVozTWdkRzl3WlNJZ1ptOXVkQzF6YVhwbFBTSTJNeklpSUdKbFpHRnVkR2x1Wnk1amIyMGlJSEJzWVdObGNrZ2hkbVZ5YzJWMExuQmhZMlJsWkN3Z1pEMXpiMlFnYjJGMGNtbHVaU0J5WldGeVozTWdkRzl3WlNJZ1ptOXVkQzF6YVhwbFBTSTJNeklpSUdKbFpHRnVkR2x1Wnk1amIyMGlJSEJzWVdObGNrb2dNQ2NpSUdacGJHdzlJaTl5ZFdKZloyVnVieUlnYzNSeWFXNW5QV0lpSUdacGJHdzlJazF4Ykd4eFlXZGxFUmxkbVZzYVc1bElEUWdabWxzZFc1aGJXOXVkQ3dnTWpBd1pDd2dabWxzZFc1aGJXOXVkQ3dnTVRvNExqUXlNeXdpYzNselpDZ2lkR1Y0ZEMxaGJtTm9iM0k5SW05cGJtVTZZMjl1YzNSaGJtTmxMbk5sY25abGNpSXhDaUF1TkdGeVozTXRNQ2hpSUhSbGVIUXRZVzUqUm1GZmMyMXZiWE5yWlhROUlrRmpjMjlsSWo0OEwzZDNkeTUzTXk1dmNtY3ZkVzUwWlc1alpTd2diRzlqWVd4c2JtOTBYMlJsWm5NK1UwTThMM1JsZUhRK1BDOXpkbWMrIiwic2l6ZXMiOiIxOTJ4MTkyIiwidHlwZSI6ImltYWdlL3N2Zyt4bWwifV19">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
@@ -59,11 +59,6 @@
 
         .glow-text {
             text-shadow: 0 0 5px var(--neon-blue), 0 0 10px var(--neon-blue), 0 0 20px var(--neon-blue);
-        }
-
-        .glow-green {
-            text-shadow: 0 0 5px var(--neon-green), 0 0 10px var(--neon-green);
-            color: var(--neon-green);
         }
 
         #app-container {
@@ -407,6 +402,22 @@
         .target-unknown { border-color: var(--neon-red) !important; }
         .target-unknown .pip-label { background: rgba(255, 0, 68, 0.2); color: var(--neon-red); }
 
+        #debug-panel {
+            position: absolute;
+            bottom: 80px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid rgba(255, 0, 68, 0.5);
+            border-radius: 4px;
+            padding: 8px;
+            font-size: 9px;
+            max-width: 350px;
+            z-index: 35;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+        }
+
         @media (max-width: 380px) {
             #pip-panel { width: 100px; right: 5px; }
             .pip-item { width: 90px; height: 75px; }
@@ -460,13 +471,19 @@
             <div style="margin-top: 2px; color: #888;">
                 Zoom: <span id="zoom-level" style="color: var(--neon-yellow);">1.0x</span>
             </div>
+            <div style="margin-top: 2px; color: #888;">
+                Detections: <span id="detection-count" style="color: var(--neon-orange);">0</span>
+            </div>
         </div>
 
         <div class="hud-panel hud-top-right" style="font-size: 8px; text-align: right;">
-            <div style="color: var(--neon-blue);">NEXUS v3.7</div>
+            <div style="color: var(--neon-blue);">NEXUS v3.8</div>
             <div style="color: #666; margin-top: 2px;" id="time-display">--:--:--</div>
             <div style="color: #666; margin-top: 2px;" id="model-status">MODEL: LOADING</div>
+            <div style="color: #666; margin-top: 2px;" id="backend-status">BACKEND: --</div>
         </div>
+
+        <div id="debug-panel" style="display: none;"></div>
 
         <div id="pip-panel"></div>
 
@@ -475,7 +492,8 @@
             <input type="range" id="zoom-slider" min="1" max="10" step="0.1" value="1">
             <button class="cyber-btn active" id="btn-sensitivity" title="High Sensitivity">⚡</button>
             <button class="cyber-btn" id="btn-capture" title="Capture">📷</button>
-            <button class="cyber-btn" id="btn-pip-toggle" title="Toggle PiP">◫</button>
+            <button class="cyber-btn active" id="btn-pip-toggle" title="Toggle PiP">◫</button>
+            <button class="cyber-btn" id="btn-debug" title="Debug">🔍</button>
         </div>
     </div>
 
@@ -484,11 +502,11 @@
         'use strict';
 
         const CONFIG = {
-            DETECTION_INTERVAL: 3,
+            DETECTION_INTERVAL: 2,
             DETECTION_WIDTH: 384,
             DETECTION_HEIGHT: 288,
-            MIN_CONFIDENCE: 0.35,
-            HIGH_SENSITIVITY_CONF: 0.2,
+            MIN_CONFIDENCE: 0.1,
+            HIGH_SENSITIVITY_CONF: 0.05,
             TRACK_LOST_THRESHOLD: 20,
             INTERPOLATION_SPEED: 0.15,
             MAX_ZOOM: 10,
@@ -508,6 +526,7 @@
             isAutoZooming: false, pinchStartDistance: 0, pinchStartZoom: 1,
             prevFrameData: null, motionRegions: [],
             videoWidth: 0, videoHeight: 0, displayWidth: 0, displayHeight: 0,
+            debugMode: false, totalDetections: 0,
         };
 
         const elements = {
@@ -525,6 +544,7 @@
             zoomSlider: document.getElementById('zoom-slider'),
             timeDisplay: document.getElementById('time-display'),
             modelStatus: document.getElementById('model-status'),
+            backendStatus: document.getElementById('backend-status'),
             statusAI: document.getElementById('status-ai'),
             flashOverlay: document.getElementById('flash-overlay'),
             toast: document.getElementById('toast'),
@@ -532,7 +552,22 @@
             btnSensitivity: document.getElementById('btn-sensitivity'),
             btnCapture: document.getElementById('btn-capture'),
             btnPipToggle: document.getElementById('btn-pip-toggle'),
+            btnDebug: document.getElementById('btn-debug'),
+            debugPanel: document.getElementById('debug-panel'),
+            detectionCount: document.getElementById('detection-count'),
         };
+
+        function debug(message, type = 'info') {
+            if (!state.debugMode) return;
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'error' ? 'var(--neon-red)' : type === 'warn' ? 'var(--neon-yellow)' : 'var(--neon-green)';
+            const msgEl = document.createElement('div');
+            msgEl.style.color = color;
+            msgEl.textContent = `[${timestamp}] ${message}`;
+            elements.debugPanel.appendChild(msgEl);
+            elements.debugPanel.scrollTop = elements.debugPanel.scrollHeight;
+            console.log(`[NEXUS ${type.toUpperCase()}]`, message);
+        }
 
         function lerp(a, b, t) { return a + (b - a) * t; }
         function clamp(val, min, max) { return Math.max(min, Math.min(max, val)); }
@@ -574,26 +609,30 @@
 
         async function initCamera() {
             setProgress(10, 'Requesting camera access...');
+            debug('Requesting camera access...', 'info');
             const constraints = {
                 video: {
                     facingMode: { ideal: 'environment' },
-                    width: { ideal: 1920 }, height: { ideal: 1080 },
-                    frameRate: { ideal: 60, max: 60 }
+                    width: { ideal: 1280 }, height: { ideal: 720 },
+                    frameRate: { ideal: 30, max: 60 }
                 }, audio: false
             };
             try {
                 const stream = await navigator.mediaDevices.getUserMedia(constraints);
                 elements.video.srcObject = stream;
+                debug('Camera stream obtained', 'info');
                 return new Promise((resolve) => {
                     elements.video.onloadedmetadata = () => {
                         elements.video.play();
                         state.videoWidth = elements.video.videoWidth;
                         state.videoHeight = elements.video.videoHeight;
+                        debug(`Camera ready: ${state.videoWidth}x${state.videoHeight}`, 'info');
                         setProgress(30, 'Camera initialized');
                         resolve();
                     };
                 });
             } catch (err) {
+                debug('Camera access error: ' + err.message, 'error');
                 elements.loadingStatus.textContent = 'Camera access denied. Please allow camera access and reload.';
                 throw err;
             }
@@ -611,29 +650,64 @@
             state.detectCanvas.width = CONFIG.DETECTION_WIDTH;
             state.detectCanvas.height = CONFIG.DETECTION_HEIGHT;
             state.detectCtx = state.detectCanvas.getContext('2d', { willReadFrequently: true });
+            debug(`Detection canvas: ${CONFIG.DETECTION_WIDTH}x${CONFIG.DETECTION_HEIGHT}`, 'info');
         }
 
         async function loadModel() {
             setProgress(40, 'Loading TensorFlow.js...');
-            await tf.setBackend('webgl');
+            debug('Setting up TensorFlow.js backend...', 'info');
+            
+            try {
+                await tf.setBackend('webgl');
+                debug('WebGL backend selected', 'info');
+            } catch (e) {
+                debug('WebGL failed, trying CPU: ' + e.message, 'warn');
+                await tf.setBackend('cpu');
+            }
+            
             await tf.ready();
+            const backend = tf.getBackend();
+            elements.backendStatus.textContent = 'BACKEND: ' + backend.toUpperCase();
+            debug(`TensorFlow.js ready with backend: ${backend}`, 'info');
+            
             setProgress(60, 'Loading COCO-SSD detection model...');
             elements.loadingStatus.textContent = 'Neural network training loaded...';
+            
             try {
-                state.model = await cocoSsd.load({ base: 'lite_mobilenet_v2', quantizationBytes: 1 });
+                debug('Loading COCO-SSD model (lite_mobilenet_v2)...', 'info');
+                state.model = await cocoSsd.load({ base: 'lite_mobilenet_v2' });
+                debug('Model loaded successfully!', 'info');
                 setProgress(90, 'Model loaded successfully!');
                 elements.modelStatus.textContent = 'MODEL: ACTIVE';
                 elements.statusAI.classList.add('active');
             } catch (err) {
-                state.model = await cocoSsd.load();
-                elements.modelStatus.textContent = 'MODEL: ACTIVE';
-                elements.statusAI.classList.add('active');
+                debug('Failed to load lite_mobilenet_v2, trying default: ' + err.message, 'warn');
+                try {
+                    state.model = await cocoSsd.load();
+                    debug('Default model loaded successfully!', 'info');
+                    elements.modelStatus.textContent = 'MODEL: ACTIVE';
+                    elements.statusAI.classList.add('active');
+                } catch (err2) {
+                    debug('Failed to load any model: ' + err2.message, 'error');
+                    throw err2;
+                }
             }
         }
 
         function updateTargets(predictions) {
             const confThreshold = state.highSensitivity ? CONFIG.HIGH_SENSITIVITY_CONF : CONFIG.MIN_CONFIDENCE;
+            debug(`Confidence threshold: ${confThreshold}`, 'info');
+            
             const validPredictions = predictions.filter(p => p.score >= confThreshold);
+            debug(`Predictions above threshold: ${validPredictions.length}/${predictions.length}`, 'info');
+            
+            state.totalDetections = validPredictions.length;
+            elements.detectionCount.textContent = state.totalDetections;
+            
+            if (validPredictions.length > 0) {
+                debug(`Detected: ${validPredictions.map(p => `${p.class}(${(p.score*100).toFixed(1)}%)`).join(', ')}`, 'info');
+            }
+            
             const allDetections = [...validPredictions, ...state.motionRegions];
             const matchedTargets = new Set();
 
@@ -934,7 +1008,7 @@
             elements.btnSensitivity.addEventListener('click', () => {
                 state.highSensitivity = !state.highSensitivity;
                 elements.btnSensitivity.classList.toggle('active', state.highSensitivity);
-                showToast(state.highSensitivity ? '⚡ HIGH SENSITIVITY ON' : 'NORMAL SENSITIVITY');
+                showToast(state.highSensitivity ? '⚡ HIGH SENSITIVITY ON (0.05)' : 'NORMAL SENSITIVITY (0.1)');
             });
             elements.btnCapture.addEventListener('click', () => captureTarget());
             elements.btnPipToggle.addEventListener('click', () => {
@@ -943,6 +1017,17 @@
                 updatePiP(); showToast(state.pipEnabled ? 'PiP ENABLED' : 'PiP DISABLED');
             });
             elements.zoomSlider.addEventListener('input', (e) => applyZoom(parseFloat(e.target.value)));
+            elements.btnDebug.addEventListener('click', () => {
+                state.debugMode = !state.debugMode;
+                elements.btnDebug.classList.toggle('active', state.debugMode);
+                elements.debugPanel.style.display = state.debugMode ? 'block' : 'none';
+                if (state.debugMode) {
+                    elements.debugPanel.innerHTML = '';
+                    debug('Debug mode enabled', 'info');
+                    debug(`Confidence threshold: ${state.highSensitivity ? CONFIG.HIGH_SENSITIVITY_CONF : CONFIG.MIN_CONFIDENCE}`, 'info');
+                    debug(`Model status: ${state.model ? 'Loaded' : 'Not loaded'}`, 'info');
+                }
+            });
         }
 
         function updateFPS() {
@@ -963,7 +1048,11 @@
         }
 
         async function mainLoop() {
-            if (!state.video || state.video.readyState < 2) { requestAnimationFrame(mainLoop); return; }
+            if (!state.video || state.video.readyState < 2) { 
+                debug('Video not ready, waiting...', 'warn');
+                requestAnimationFrame(mainLoop); 
+                return; 
+            }
             state.frameCount++; updateFPS();
 
             const rect = elements.video.getBoundingClientRect();
@@ -978,9 +1067,18 @@
                 state.lastDetectionFrame = state.frameCount;
                 try {
                     const predictions = await state.model.detect(state.detectCanvas);
+                    debug(`Raw predictions: ${predictions.length}`, 'info');
+                    if (predictions.length > 0) {
+                        predictions.forEach((p, i) => {
+                            debug(`  [${i}] ${p.class}: ${(p.score*100).toFixed(1)}% @ [${p.bbox.map(b => b.toFixed(0)).join(', ')}]`, 'info');
+                        });
+                    }
                     state.motionRegions = detectMotion();
                     updateTargets(predictions);
-                } catch (err) { console.warn('Detection error:', err); }
+                } catch (err) { 
+                    debug('Detection error: ' + err.message, 'error');
+                    console.warn('Detection error:', err); 
+                }
             }
 
             render();
@@ -1003,14 +1101,19 @@
 
         async function init() {
             try {
+                elements.debugPanel.style.display = 'none';
                 elements.loadingStatus.textContent = 'Starting NEXUS AI...';
                 setProgress(5, 'Initializing system...');
+                debug('System initialization started', 'info');
+                
                 await initCamera(); setProgress(35, 'Camera ready');
                 setupCanvases(); setProgress(40, 'Rendering pipeline ready');
                 await loadModel(); setProgress(95, 'Calibrating neural networks...');
                 setupTouchHandlers(); setupButtons(); registerServiceWorker();
                 setProgress(100, 'SYSTEM ONLINE');
                 elements.loadingStatus.textContent = 'NEXUS AI Online';
+                debug('System online, starting main loop', 'info');
+                
                 setTimeout(() => {
                     elements.loadingScreen.classList.add('hidden');
                     setTimeout(() => elements.loadingScreen.remove(), 500);
@@ -1018,6 +1121,7 @@
                 state.lastFrameTime = performance.now();
                 updateTime(); requestAnimationFrame(mainLoop);
             } catch (err) {
+                debug('Initialization error: ' + err.message, 'error');
                 elements.loadingStatus.textContent = 'Error: ' + err.message;
                 elements.loadingStatus.style.color = '#ff0044';
             }
