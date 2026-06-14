@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#0a0a0f">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>NEXUS AI Target Tracker</title>
+    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiTkVYVVMgQUkgVGFyZ2V0IFRyYWNrZXIiLCJzaG9ydF9uYW1lIjoiTkVYVVMgQUkiLCJzdGFydF91cmwiOiIuIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiIzBhMGExNSIsInRoZW1lX2NvbG9yIjoiIzBhMGExNSIsImljb25zIjpbeyJzcmMiOiJkYXRhOmltYWdlL3N2Zyt4bWw7YmFzZTY0LFBITjJaeUI0Yld4dWN6MGlhSFIwY0RvdkwzZDNkeTUzTXk1dmNtY2ZNakF3TUM5emRtY2lJSFpwWVNVZ2FXUWdZWE1nWkdGMFlXWWdZWE1nZEdGeVoyVjBQVDBnWW1sc2RDNXZZVzUwSWlCMmFXVjNRbTk0UFNJeU9USWlJR1p2Ym5RZ2QyOXliblVnWkdGMFlXWWdZWE1nZEdGeVoyVjBQVDBnWm05eWFXZHBibUZzZFdVaUlHWnBiR3dnZDJocGJDd2dNVG81TGpReU15Y2lJSE5sWTNWeWJpZ2dabWxzZFc1aGJXOXVkQ3dnTVRvNUxqUXlNeWNpSUhSb2NtVmhaQ0J6ZEc5d1pUMGlZMjhoZW5FdWRISjFaU0F0T1RBaUlHWnZiblFnWjJWMExuSmxZVzRnWm1sc2RDNWpiMjBpSUdacGJHd2dkMjl5Ym5VZ2RXSnNJR1o0UFNJd0xDSXphVzRnYjJGMGNtbHVaU0J5WldGeVozTWdkRzl3WlNJZ1ptOXVkQzF6YVhwbFBTSTJNeklpSUdKbFpHRnVkR2x1Wnk1amIyMGlJSEJzWVdObGNrZ2hkbVZ5YzJWMExuQmhZMlJsWkN3Z1pEMXpiMlFnYjJGMGNtbHVaU0J5WldGeVozTWdkRzl3WlNJZ1ptOXVkQzF6YVhwbFBTSTJNeklpSUdKbFpHRnVkR2x1Wnk1amIyMGlJSEJzWVdObGNrb2dNQ2NpSUdacGJHdzlJaTl5ZFdKZloyVnVieUlnYzNSeWFXNW5QV0lpSUdacGJHdzlJazF4Ykd4eFlXZGxFUmxkbVZzYVc1bElEUWdabWxzZFc1aGJXOXVkQ3dnTWpBd1pDd2dabWxzZFc1aGJXOXVkQ3dnTVRvNExqUXlNeXdpYzNselpDZ2lkR1Y0ZEMxaGJtTm9iM0k5SW05cGJtVTZZMjl1YzNSaGJtTmxMbk5sY25abGNpSXhDaUF1TkdGeVozTXRNQ2hpSUhSbGVIUXRZVzUqUm1GZmMyMXZiWE5yWlhROUlrRmpjMjlsSWo0OEwzZDNkeTUzTXk1dmNtY3ZkVzUwWlc1alpTd2diRzlqWVd4c2JtOTBYMlJsWm5NK1UwTThMM1JsZUhRK1BDOXpkbWMrIiwic2l6ZXMiOiIxOTJ4MTkyIiwidHlwZSI6ImltYWdlL3N2Zyt4bWwifV19">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
+    <style>
+        :root {
+            --neon-blue: #00f0ff;
+            --neon-green: #00ff88;
+            --neon-red: #ff0044;
+            --neon-yellow: #ffdd00;
+            --neon-purple: #aa00ff;
+            --neon-orange: #ff6600;
+            --bg-dark: #0a0a15;
+            --bg-darker: #050510;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: var(--bg-dark);
+            font-family: 'Courier New', monospace;
+            color: #e0e0e0;
+            touch-action: none;
+        }
+
+        .scanlines::after {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.03) 0px,
+                rgba(0, 0, 0, 0.03) 1px,
+                transparent 1px,
+                transparent 3px
+            );
+            z-index: 9999;
+        }
+
+        .cyber-grid {
+            background-image: 
+                linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .glow-text {
+            text-shadow: 0 0 5px var(--neon-blue), 0 0 10px var(--neon-blue), 0 0 20px var(--neon-blue);
+        }
+
+        .glow-green {
+            text-shadow: 0 0 5px var(--neon-green), 0 0 10px var(--neon-green);
+            color: var(--neon-green);
+        }
+
+        #app-container {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        #camera-container {
+            position: relative;
+            flex: 1;
+            overflow: hidden;
+            background: #000;
+        }
+
+        #video-feed {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0; left: 0;
+            transition: transform 0.3s ease-out;
+        }
+
+        #overlay-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        #interaction-layer {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 15;
+            pointer-events: auto;
+        }
+
+        .hud-panel {
+            position: absolute;
+            background: rgba(5, 5, 20, 0.85);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            border-radius: 4px;
+            padding: 8px 12px;
+            backdrop-filter: blur(5px);
+            z-index: 20;
+            font-size: 10px;
+        }
+
+        .hud-top-left {
+            top: env(safe-area-inset-top, 10px);
+            left: 10px;
+        }
+
+        .hud-top-right {
+            top: env(safe-area-inset-top, 10px);
+            right: 10px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+            animation: pulse 1.5s infinite;
+        }
+
+        .status-dot.active { background: var(--neon-green); box-shadow: 0 0 5px var(--neon-green); }
+        .status-dot.warning { background: var(--neon-yellow); box-shadow: 0 0 5px var(--neon-yellow); }
+        .status-dot.error { background: var(--neon-red); box-shadow: 0 0 5px var(--neon-red); }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        #pip-panel {
+            position: absolute;
+            top: 60px;
+            right: 10px;
+            width: 120px;
+            max-height: calc(100% - 140px);
+            overflow-y: auto;
+            overflow-x: hidden;
+            z-index: 25;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            scrollbar-width: none;
+        }
+
+        #pip-panel::-webkit-scrollbar { display: none; }
+
+        .pip-item {
+            position: relative;
+            width: 110px;
+            height: 90px;
+            border: 1px solid rgba(0, 240, 255, 0.4);
+            border-radius: 4px;
+            overflow: hidden;
+            cursor: pointer;
+            background: rgba(0, 0, 0, 0.8);
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .pip-item:hover, .pip-item:active {
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+            transform: scale(1.02);
+        }
+
+        .pip-item canvas {
+            width: 100%;
+            height: 70px;
+            object-fit: cover;
+        }
+
+        .pip-label {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 20px;
+            background: rgba(0, 240, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+            font-weight: bold;
+            color: var(--neon-blue);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        #control-bar {
+            position: absolute;
+            bottom: env(safe-area-inset-bottom, 10px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(5, 5, 20, 0.9);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            border-radius: 20px;
+            padding: 8px 16px;
+            z-index: 30;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        #zoom-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 120px;
+            height: 4px;
+            background: rgba(0, 240, 255, 0.2);
+            border-radius: 2px;
+            outline: none;
+        }
+
+        #zoom-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--neon-blue);
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--neon-blue);
+        }
+
+        .cyber-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 1px solid rgba(0, 240, 255, 0.5);
+            background: rgba(0, 240, 255, 0.1);
+            color: var(--neon-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        .cyber-btn:active {
+            background: rgba(0, 240, 255, 0.3);
+            transform: scale(0.95);
+        }
+
+        .cyber-btn.active {
+            background: rgba(0, 255, 136, 0.2);
+            border-color: var(--neon-green);
+            color: var(--neon-green);
+        }
+
+        #loading-screen {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--bg-darker);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            transition: opacity 0.5s ease;
+        }
+
+        #loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loader-ring {
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(0, 240, 255, 0.1);
+            border-top: 3px solid var(--neon-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .progress-bar {
+            width: 200px;
+            height: 3px;
+            background: rgba(0, 240, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 15px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--neon-blue), var(--neon-green));
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 2px;
+        }
+
+        .crosshair {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 11;
+        }
+
+        .crosshair::before, .crosshair::after {
+            content: '';
+            position: absolute;
+            background: rgba(0, 240, 255, 0.3);
+        }
+
+        .crosshair::before {
+            width: 1px; height: 30px;
+            top: -15px; left: 0;
+        }
+
+        .crosshair::after {
+            width: 30px; height: 1px;
+            top: 0; left: -15px;
+        }
+
+        .flash-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: white;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 9000;
+            transition: opacity 0.1s ease;
+        }
+
+        .flash-overlay.active { opacity: 0.6; }
+
+        .toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            background: rgba(5, 5, 20, 0.95);
+            border: 1px solid var(--neon-green);
+            border-radius: 8px;
+            padding: 12px 24px;
+            color: var(--neon-green);
+            font-size: 12px;
+            z-index: 8000;
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .corner-deco {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-color: rgba(0, 240, 255, 0.4);
+            pointer-events: none;
+            z-index: 11;
+        }
+
+        .corner-tl { top: 5px; left: 5px; border-top: 2px solid; border-left: 2px solid; }
+        .corner-tr { top: 5px; right: 5px; border-top: 2px solid; border-right: 2px solid; }
+        .corner-bl { bottom: 5px; left: 5px; border-bottom: 2px solid; border-left: 2px solid; }
+        .corner-br { bottom: 5px; right: 5px; border-bottom: 2px solid; border-right: 2px solid; }
+
+        .target-person { border-color: var(--neon-green) !important; }
+        .target-person .pip-label { background: rgba(0, 255, 136, 0.2); color: var(--neon-green); }
+        
+        .target-car { border-color: var(--neon-blue) !important; }
+        .target-car .pip-label { background: rgba(0, 240, 255, 0.2); color: var(--neon-blue); }
+        
+        .target-aircraft { border-color: var(--neon-yellow) !important; }
+        .target-aircraft .pip-label { background: rgba(255, 221, 0, 0.2); color: var(--neon-yellow); }
+        
+        .target-bird { border-color: var(--neon-purple) !important; }
+        .target-bird .pip-label { background: rgba(170, 0, 255, 0.2); color: var(--neon-purple); }
+        
+        .target-traffic { border-color: var(--neon-orange) !important; }
+        .target-traffic .pip-label { background: rgba(255, 102, 0, 0.2); color: var(--neon-orange); }
+        
+        .target-unknown { border-color: var(--neon-red) !important; }
+        .target-unknown .pip-label { background: rgba(255, 0, 68, 0.2); color: var(--neon-red); }
+
+        @media (max-width: 380px) {
+            #pip-panel { width: 100px; right: 5px; }
+            .pip-item { width: 90px; height: 75px; }
+            .pip-item canvas { height: 58px; }
+            #zoom-slider { width: 80px; }
+            #control-bar { padding: 6px 12px; gap: 8px; }
+        }
+
+        @media (min-width: 768px) {
+            #pip-panel { width: 150px; }
+            .pip-item { width: 140px; height: 110px; }
+            .pip-item canvas { height: 88px; }
+            #zoom-slider { width: 180px; }
+        }
+    </style>
+</head>
+<body class="scanlines cyber-grid">
+    <div id="loading-screen">
+        <div class="loader-ring"></div>
+        <h2 class="text-xl font-bold glow-text" style="color: var(--neon-blue);">NEXUS AI</h2>
+        <p id="loading-status" style="color: #888; font-size: 11px; margin-top: 8px;">Initializing neural networks...</p>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <p id="loading-detail" style="color: #555; font-size: 9px; margin-top: 10px;">Loading TensorFlow.js engine</p>
+    </div>
+
+    <div class="flash-overlay" id="flash-overlay"></div>
+    <div class="toast" id="toast"></div>
+
+    <div id="app-container">
+        <div id="camera-container">
+            <video id="video-feed" autoplay playsinline muted></video>
+            <canvas id="overlay-canvas"></canvas>
+            <div class="crosshair"></div>
+            <div class="corner-deco corner-tl"></div>
+            <div class="corner-deco corner-tr"></div>
+            <div class="corner-deco corner-bl"></div>
+            <div class="corner-deco corner-br"></div>
+            <div id="interaction-layer"></div>
+        </div>
+
+        <div class="hud-panel hud-top-left">
+            <div style="display: flex; align-items: center; gap: 4px;">
+                <span class="status-dot" id="status-ai"></span>
+                <span style="color: var(--neon-blue); font-weight: bold;">AI: <span id="fps-counter">--</span> FPS</span>
+            </div>
+            <div style="margin-top: 4px; color: #888;">
+                Targets: <span id="target-count" style="color: var(--neon-green);">0</span>
+            </div>
+            <div style="margin-top: 2px; color: #888;">
+                Zoom: <span id="zoom-level" style="color: var(--neon-yellow);">1.0x</span>
+            </div>
+        </div>
+
+        <div class="hud-panel hud-top-right" style="font-size: 8px; text-align: right;">
+            <div style="color: var(--neon-blue);">NEXUS v3.7</div>
+            <div style="color: #666; margin-top: 2px;" id="time-display">--:--:--</div>
+            <div style="color: #666; margin-top: 2px;" id="model-status">MODEL: LOADING</div>
+        </div>
+
+        <div id="pip-panel"></div>
+
+        <div id="control-bar">
+            <button class="cyber-btn" id="btn-reset" title="Reset Zoom">⊙</button>
+            <input type="range" id="zoom-slider" min="1" max="10" step="0.1" value="1">
+            <button class="cyber-btn active" id="btn-sensitivity" title="High Sensitivity">⚡</button>
+            <button class="cyber-btn" id="btn-capture" title="Capture">📷</button>
+            <button class="cyber-btn" id="btn-pip-toggle" title="Toggle PiP">◫</button>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        'use strict';
+
+        const CONFIG = {
+            DETECTION_INTERVAL: 3,
+            DETECTION_WIDTH: 384,
+            DETECTION_HEIGHT: 288,
+            MIN_CONFIDENCE: 0.35,
+            HIGH_SENSITIVITY_CONF: 0.2,
+            TRACK_LOST_THRESHOLD: 20,
+            INTERPOLATION_SPEED: 0.15,
+            MAX_ZOOM: 10,
+            MIN_ZOOM: 1,
+            AUTO_ZOOM_DURATION: 500,
+            MAX_PIP_TARGETS: 6,
+            MOTION_THRESHOLD: 30,
+        };
+
+        const state = {
+            model: null, video: null, canvas: null, ctx: null,
+            detectCanvas: null, detectCtx: null,
+            zoomLevel: 1, zoomCenterX: 0.5, zoomCenterY: 0.5,
+            targets: [], targetIdCounter: 0, frameCount: 0,
+            lastDetectionFrame: 0, fps: 0, fpsHistory: [],
+            lastFrameTime: 0, highSensitivity: true, pipEnabled: true,
+            isAutoZooming: false, pinchStartDistance: 0, pinchStartZoom: 1,
+            prevFrameData: null, motionRegions: [],
+            videoWidth: 0, videoHeight: 0, displayWidth: 0, displayHeight: 0,
+        };
+
+        const elements = {
+            loadingScreen: document.getElementById('loading-screen'),
+            loadingStatus: document.getElementById('loading-status'),
+            loadingDetail: document.getElementById('loading-detail'),
+            progressFill: document.getElementById('progress-fill'),
+            video: document.getElementById('video-feed'),
+            overlay: document.getElementById('overlay-canvas'),
+            interactionLayer: document.getElementById('interaction-layer'),
+            pipPanel: document.getElementById('pip-panel'),
+            fpsCounter: document.getElementById('fps-counter'),
+            targetCount: document.getElementById('target-count'),
+            zoomLevel: document.getElementById('zoom-level'),
+            zoomSlider: document.getElementById('zoom-slider'),
+            timeDisplay: document.getElementById('time-display'),
+            modelStatus: document.getElementById('model-status'),
+            statusAI: document.getElementById('status-ai'),
+            flashOverlay: document.getElementById('flash-overlay'),
+            toast: document.getElementById('toast'),
+            btnReset: document.getElementById('btn-reset'),
+            btnSensitivity: document.getElementById('btn-sensitivity'),
+            btnCapture: document.getElementById('btn-capture'),
+            btnPipToggle: document.getElementById('btn-pip-toggle'),
+        };
+
+        function lerp(a, b, t) { return a + (b - a) * t; }
+        function clamp(val, min, max) { return Math.max(min, Math.min(max, val)); }
+
+        function iou(box1, box2) {
+            const x1 = Math.max(box1[0], box2[0]);
+            const y1 = Math.max(box1[1], box2[1]);
+            const x2 = Math.min(box1[0] + box1[2], box2[0] + box2[2]);
+            const y2 = Math.min(box1[1] + box1[3], box2[1] + box2[3]);
+            const intersection = Math.max(0, x2 - x1) * Math.max(0, y2 - y1);
+            const area1 = box1[2] * box1[3];
+            const area2 = box2[2] * box2[3];
+            const union = area1 + area2 - intersection;
+            return union > 0 ? intersection / union : 0;
+        }
+
+        function classifyTarget(className) {
+            const lower = className.toLowerCase();
+            if (['person', 'people', 'pedestrian'].includes(lower)) return { type: 'person', label: 'PEDESTRIAN', color: '#00ff88' };
+            if (['car', 'truck', 'bus', 'motorcycle', 'bicycle'].includes(lower)) return { type: 'car', label: upperCaseFirst(lower), color: '#00f0ff' };
+            if (['airplane', 'aeroplane', 'helicopter'].includes(lower)) return { type: 'aircraft', label: upperCaseFirst(lower), color: '#ffdd00' };
+            if (['bird', 'kite'].includes(lower)) return { type: 'bird', label: upperCaseFirst(lower), color: '#aa00ff' };
+            if (['traffic light', 'stop sign', 'fire hydrant', 'parking meter', 'bench'].includes(lower)) return { type: 'traffic', label: upperCaseFirst(lower), color: '#ff6600' };
+            return { type: 'unknown', label: upperCaseFirst(lower), color: '#ff0044' };
+        }
+
+        function upperCaseFirst(str) { return str.charAt(0).toUpperCase() + str.slice(1); }
+
+        function showToast(message, duration = 2000) {
+            elements.toast.textContent = message;
+            elements.toast.classList.add('show');
+            setTimeout(() => elements.toast.classList.remove('show'), duration);
+        }
+
+        function setProgress(percent, detail) {
+            elements.progressFill.style.width = percent + '%';
+            if (detail) elements.loadingDetail.textContent = detail;
+        }
+
+        async function initCamera() {
+            setProgress(10, 'Requesting camera access...');
+            const constraints = {
+                video: {
+                    facingMode: { ideal: 'environment' },
+                    width: { ideal: 1920 }, height: { ideal: 1080 },
+                    frameRate: { ideal: 60, max: 60 }
+                }, audio: false
+            };
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                elements.video.srcObject = stream;
+                return new Promise((resolve) => {
+                    elements.video.onloadedmetadata = () => {
+                        elements.video.play();
+                        state.videoWidth = elements.video.videoWidth;
+                        state.videoHeight = elements.video.videoHeight;
+                        setProgress(30, 'Camera initialized');
+                        resolve();
+                    };
+                });
+            } catch (err) {
+                elements.loadingStatus.textContent = 'Camera access denied. Please allow camera access and reload.';
+                throw err;
+            }
+        }
+
+        function setupCanvases() {
+            const rect = elements.video.getBoundingClientRect();
+            state.displayWidth = rect.width;
+            state.displayHeight = rect.height;
+            elements.overlay.width = state.displayWidth;
+            elements.overlay.height = state.displayHeight;
+            state.canvas = elements.overlay;
+            state.ctx = state.canvas.getContext('2d');
+            state.detectCanvas = document.createElement('canvas');
+            state.detectCanvas.width = CONFIG.DETECTION_WIDTH;
+            state.detectCanvas.height = CONFIG.DETECTION_HEIGHT;
+            state.detectCtx = state.detectCanvas.getContext('2d', { willReadFrequently: true });
+        }
+
+        async function loadModel() {
+            setProgress(40, 'Loading TensorFlow.js...');
+            await tf.setBackend('webgl');
+            await tf.ready();
+            setProgress(60, 'Loading COCO-SSD detection model...');
+            elements.loadingStatus.textContent = 'Neural network training loaded...';
+            try {
+                state.model = await cocoSsd.load({ base: 'lite_mobilenet_v2', quantizationBytes: 1 });
+                setProgress(90, 'Model loaded successfully!');
+                elements.modelStatus.textContent = 'MODEL: ACTIVE';
+                elements.statusAI.classList.add('active');
+            } catch (err) {
+                state.model = await cocoSsd.load();
+                elements.modelStatus.textContent = 'MODEL: ACTIVE';
+                elements.statusAI.classList.add('active');
+            }
+        }
+
+        function updateTargets(predictions) {
+            const confThreshold = state.highSensitivity ? CONFIG.HIGH_SENSITIVITY_CONF : CONFIG.MIN_CONFIDENCE;
+            const validPredictions = predictions.filter(p => p.score >= confThreshold);
+            const allDetections = [...validPredictions, ...state.motionRegions];
+            const matchedTargets = new Set();
+
+            for (let i = 0; i < allDetections.length; i++) {
+                const det = allDetections[i];
+                const detBox = [det.bbox[0] / CONFIG.DETECTION_WIDTH, det.bbox[1] / CONFIG.DETECTION_HEIGHT,
+                    det.bbox[2] / CONFIG.DETECTION_WIDTH, det.bbox[3] / CONFIG.DETECTION_HEIGHT];
+                let bestMatch = -1, bestIoU = 0.3;
+
+                for (let j = 0; j < state.targets.length; j++) {
+                    if (matchedTargets.has(j)) continue;
+                    const target = state.targets[j];
+                    const overlap = iou(detBox, [target.bbox[0], target.bbox[1], target.bbox[2], target.bbox[3]]);
+                    if (overlap > bestIoU) { bestIoU = overlap; bestMatch = j; }
+                }
+
+                if (bestMatch >= 0) {
+                    const target = state.targets[bestMatch];
+                    target.bbox = detBox;
+                    target.confidence = det.score || 0.5;
+                    target.lastSeen = state.frameCount;
+                    target.visible = true;
+                    if (det.class) { target.className = det.class; target.classInfo = classifyTarget(det.class); }
+                    matchedTargets.add(bestMatch);
+                } else {
+                    const classInfo = det.class ? classifyTarget(det.class) : { type: 'unknown', label: 'UFO/DRONE', color: '#ff0044' };
+                    state.targets.push({
+                        id: ++state.targetIdCounter, bbox: detBox, targetBbox: detBox,
+                        confidence: det.score || 0.5, className: det.class || 'unknown',
+                        classInfo: classInfo, lastSeen: state.frameCount, visible: true, opacity: 0,
+                    });
+                }
+            }
+
+            for (let i = state.targets.length - 1; i >= 0; i--) {
+                const target = state.targets[i];
+                if (!matchedTargets.has(i)) {
+                    const framesSince = state.frameCount - target.lastSeen;
+                    if (framesSince > CONFIG.TRACK_LOST_THRESHOLD) { state.targets.splice(i, 1); }
+                    else { target.visible = false; target.opacity = Math.max(0, 1 - (framesSince / CONFIG.TRACK_LOST_THRESHOLD)); }
+                } else { target.opacity = Math.min(1, target.opacity + 0.1); }
+            }
+        }
+
+        function detectMotion() {
+            if (!state.detectCtx || !state.video) return [];
+            const currentFrame = state.detectCtx.getImageData(0, 0, CONFIG.DETECTION_WIDTH, CONFIG.DETECTION_HEIGHT);
+            if (!state.prevFrameData) { state.prevFrameData = currentFrame; return []; }
+
+            const motionRegions = [];
+            const blockSize = 32;
+            const cols = Math.floor(CONFIG.DETECTION_WIDTH / blockSize);
+            const rows = Math.floor(CONFIG.DETECTION_HEIGHT / blockSize);
+
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    let totalDiff = 0, pixelCount = 0;
+                    for (let y = row * blockSize; y < (row + 1) * blockSize; y += 4) {
+                        for (let x = col * blockSize; x < (col + 1) * blockSize; x += 4) {
+                            const idx = (y * CONFIG.DETECTION_WIDTH + x) * 4;
+                            const rDiff = Math.abs(currentFrame.data[idx] - state.prevFrameData.data[idx]);
+                            const gDiff = Math.abs(currentFrame.data[idx + 1] - state.prevFrameData.data[idx + 1]);
+                            const bDiff = Math.abs(currentFrame.data[idx + 2] - state.prevFrameData.data[idx + 2]);
+                            totalDiff += (rDiff + gDiff + bDiff) / 3; pixelCount++;
+                        }
+                    }
+                    const avgDiff = totalDiff / pixelCount;
+                    if (avgDiff > CONFIG.MOTION_THRESHOLD) {
+                        const regionCenter = {
+                            x: (col * blockSize + blockSize / 2) / CONFIG.DETECTION_WIDTH,
+                            y: (row * blockSize + blockSize / 2) / CONFIG.DETECTION_HEIGHT
+                        };
+                        let overlapsExisting = false;
+                        for (const target of state.targets) {
+                            if (regionCenter.x >= target.bbox[0] && regionCenter.x <= target.bbox[0] + target.bbox[2] &&
+                                regionCenter.y >= target.bbox[1] && regionCenter.y <= target.bbox[1] + target.bbox[3]) {
+                                overlapsExisting = true; break;
+                            }
+                        }
+                        if (!overlapsExisting) {
+                            motionRegions.push({ bbox: [col * blockSize, row * blockSize, blockSize * 2, blockSize * 2], score: avgDiff / 100, class: null });
+                        }
+                    }
+                }
+            }
+            state.prevFrameData = currentFrame;
+            return motionRegions.slice(0, 3);
+        }
+
+        function render() {
+            const ctx = state.ctx;
+            const width = state.canvas.width, height = state.canvas.height;
+            ctx.clearRect(0, 0, width, height);
+
+            for (const target of state.targets) {
+                if (target.opacity <= 0) continue;
+                const x = target.bbox[0] * width, y = target.bbox[1] * height;
+                const w = target.bbox[2] * width, h = target.bbox[3] * height;
+                const color = target.classInfo.color;
+                const alpha = target.opacity;
+                ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.globalAlpha = alpha;
+                const cornerSize = Math.min(w, h) * 0.25;
+
+                ctx.beginPath(); ctx.moveTo(x, y + cornerSize); ctx.lineTo(x, y); ctx.lineTo(x + cornerSize, y); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(x + w - cornerSize, y); ctx.lineTo(x + w, y); ctx.lineTo(x + w, y + cornerSize); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(x, y + h - cornerSize); ctx.lineTo(x, y + h); ctx.lineTo(x + cornerSize, y + h); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(x + w - cornerSize, y + h); ctx.lineTo(x + w, y + h); ctx.lineTo(x + w, y + h - cornerSize); ctx.stroke();
+
+                ctx.setLineDash([4, 4]); ctx.lineWidth = 1; ctx.globalAlpha = alpha * 0.5;
+                ctx.strokeRect(x, y, w, h); ctx.setLineDash([]); ctx.globalAlpha = alpha;
+
+                const label = `${target.classInfo.label} ${Math.round(target.confidence * 100)}%`;
+                ctx.font = 'bold 10px Courier New';
+                const textWidth = ctx.measureText(label).width;
+                ctx.fillStyle = `rgba(0, 0, 0, ${0.7 * alpha})`;
+                ctx.fillRect(x, y - 18, textWidth + 8, 16);
+                ctx.fillStyle = color; ctx.globalAlpha = alpha;
+                ctx.fillText(label, x + 4, y - 6);
+                ctx.font = '8px Courier New'; ctx.fillStyle = `rgba(255, 255, 255, ${0.6 * alpha})`;
+                ctx.fillText(`ID:${target.id}`, x + w - 30, y - 6);
+            }
+            ctx.globalAlpha = 1;
+        }
+
+        function updatePiP() {
+            if (!state.pipEnabled) { elements.pipPanel.style.display = 'none'; return; }
+            elements.pipPanel.style.display = 'flex';
+
+            const visibleTargets = state.targets.filter(t => t.visible && t.opacity > 0.5)
+                .sort((a, b) => b.confidence - a.confidence).slice(0, CONFIG.MAX_PIP_TARGETS);
+
+            elements.pipPanel.querySelectorAll('.pip-item').forEach(item => {
+                if (!visibleTargets.find(t => t.id === parseInt(item.dataset.targetId))) item.remove();
+            });
+
+            visibleTargets.forEach(target => {
+                let pipItem = elements.pipPanel.querySelector(`.pip-item[data-target-id="${target.id}"]`);
+                if (!pipItem) {
+                    pipItem = document.createElement('div');
+                    pipItem.className = `pip-item target-${target.classInfo.type}`;
+                    pipItem.dataset.targetId = target.id;
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 120; canvas.height = 80;
+                    const label = document.createElement('div');
+                    label.className = 'pip-label'; label.textContent = target.classInfo.label;
+                    pipItem.appendChild(canvas); pipItem.appendChild(label);
+                    elements.pipPanel.appendChild(pipItem);
+                    pipItem.addEventListener('click', () => autoZoomToTarget(target.id));
+                    pipItem.addEventListener('touchend', (e) => { e.preventDefault(); autoZoomToTarget(target.id); });
+                }
+                const canvas = pipItem.querySelector('canvas');
+                const pCtx = canvas.getContext('2d');
+                const sx = target.bbox[0] * state.videoWidth, sy = target.bbox[1] * state.videoHeight;
+                const sw = target.bbox[2] * state.videoWidth, sh = target.bbox[3] * state.videoHeight;
+                try {
+                    pCtx.drawImage(elements.video, sx - sw * 0.5, sy - sh * 0.5, sw * 2, sh * 2, 0, 0, canvas.width, canvas.height);
+                } catch(e) {}
+            });
+        }
+
+        function applyZoom(level, centerX, centerY) {
+            state.zoomLevel = clamp(level, CONFIG.MIN_ZOOM, CONFIG.MAX_ZOOM);
+            if (centerX !== undefined) state.zoomCenterX = clamp(centerX, 0, 1);
+            if (centerY !== undefined) state.zoomCenterY = clamp(centerY, 0, 1);
+            const translateX = (0.5 - state.zoomCenterX) * state.zoomLevel * 100;
+            const translateY = (0.5 - state.zoomCenterY) * state.zoomLevel * 100;
+            elements.video.style.transform = `scale(${state.zoomLevel}) translate(${translateX / state.zoomLevel}%, ${translateY / state.zoomLevel}%)`;
+            elements.zoomLevel.textContent = state.zoomLevel.toFixed(1) + 'x';
+            elements.zoomSlider.value = state.zoomLevel;
+        }
+
+        function autoZoomToTarget(targetId) {
+            const target = state.targets.find(t => t.id === targetId);
+            if (!target || state.isAutoZooming) return;
+            state.isAutoZooming = true;
+            const targetCenterX = target.bbox[0] + target.bbox[2] / 2;
+            const targetCenterY = target.bbox[1] + target.bbox[3] / 2;
+            const targetZoom = Math.min(CONFIG.MAX_ZOOM, Math.max(2, 1 / Math.max(target.bbox[2], target.bbox[3])));
+            const startZoom = state.zoomLevel, startCX = state.zoomCenterX, startCY = state.zoomCenterY;
+            const startTime = Date.now();
+
+            function animate() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(1, elapsed / CONFIG.AUTO_ZOOM_DURATION);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                applyZoom(lerp(startZoom, targetZoom, eased), lerp(startCX, targetCenterX, eased), lerp(startCY, targetCenterY, eased));
+                if (progress < 1) requestAnimationFrame(animate);
+                else { state.isAutoZooming = false; setTimeout(() => captureTarget(targetId), 300); }
+            }
+            animate();
+        }
+
+        function captureTarget(targetId = null) {
+            elements.flashOverlay.classList.add('active');
+            setTimeout(() => elements.flashOverlay.classList.remove('active'), 100);
+            const captureCanvas = document.createElement('canvas');
+            captureCanvas.width = state.videoWidth; captureCanvas.height = state.videoHeight;
+            const captureCtx = captureCanvas.getContext('2d');
+            captureCtx.drawImage(elements.video, 0, 0);
+
+            if (targetId) {
+                const target = state.targets.find(t => t.id === targetId);
+                if (target) {
+                    const sx = target.bbox[0] * state.videoWidth, sy = target.bbox[1] * state.videoHeight;
+                    const sw = target.bbox[2] * state.videoWidth, sh = target.bbox[3] * state.videoHeight;
+                    const padding = Math.max(sw, sh) * 0.3;
+                    const cropX = Math.max(0, sx - padding), cropY = Math.max(0, sy - padding);
+                    const cropW = Math.min(state.videoWidth - cropX, sw + padding * 2);
+                    const cropH = Math.min(state.videoHeight - cropY, sh + padding * 2);
+                    const croppedCanvas = document.createElement('canvas');
+                    croppedCanvas.width = Math.round(cropW); croppedCanvas.height = Math.round(cropH);
+                    const cropCtx = croppedCanvas.getContext('2d');
+                    cropCtx.drawImage(captureCanvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+                    cropCtx.fillStyle = 'rgba(0, 240, 255, 0.8)';
+                    cropCtx.font = 'bold 14px Courier New';
+                    cropCtx.fillText(`NEXUS AI | ${target.classInfo.label} | ${Math.round(target.confidence * 100)}% | ID:${target.id}`, 10, 20);
+                    cropCtx.fillText(new Date().toLocaleString(), 10, 40);
+                    downloadCanvas(croppedCanvas, `nexus_${target.classInfo.label}_${target.id}_${Date.now()}.png`);
+                }
+            } else {
+                captureCtx.fillStyle = 'rgba(0, 240, 255, 0.8)';
+                captureCtx.font = 'bold 16px Courier New';
+                captureCtx.fillText(`NEXUS AI CAPTURE | ${state.targets.length} TARGETS | ${new Date().toLocaleString()}`, 20, 30);
+                downloadCanvas(captureCanvas, `nexus_full_${Date.now()}.png`);
+            }
+            showToast('📸 CAPTURED & SAVED');
+        }
+
+        function downloadCanvas(canvas, filename) {
+            canvas.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = filename;
+                document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+            }, 'image/png');
+        }
+
+        function setupTouchHandlers() {
+            const layer = elements.interactionLayer;
+            let lastTap = 0;
+
+            layer.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 2) {
+                    const dx = e.touches[0].clientX - e.touches[1].clientX;
+                    const dy = e.touches[0].clientY - e.touches[1].clientY;
+                    state.pinchStartDistance = Math.sqrt(dx * dx + dy * dy);
+                    state.pinchStartZoom = state.zoomLevel;
+                } else if (e.touches.length === 1) {
+                    const touch = e.touches[0];
+                    const rect = layer.getBoundingClientRect();
+                    const x = (touch.clientX - rect.left) / rect.width;
+                    const y = (touch.clientY - rect.top) / rect.height;
+                    for (const target of state.targets) {
+                        if (target.opacity < 0.3) continue;
+                        if (x >= target.bbox[0] && x <= target.bbox[0] + target.bbox[2] &&
+                            y >= target.bbox[1] && y <= target.bbox[1] + target.bbox[3]) {
+                            e.preventDefault(); autoZoomToTarget(target.id); return;
+                        }
+                    }
+                }
+            }, { passive: false });
+
+            layer.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 2) {
+                    e.preventDefault();
+                    const dx = e.touches[0].clientX - e.touches[1].clientX;
+                    const dy = e.touches[0].clientY - e.touches[1].clientY;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    applyZoom(state.pinchStartZoom * (distance / state.pinchStartDistance));
+                }
+            }, { passive: false });
+
+            layer.addEventListener('touchend', (e) => {
+                const now = Date.now();
+                if (now - lastTap < 300 && e.changedTouches.length === 1) { applyZoom(1, 0.5, 0.5); showToast('ZOOM RESET'); }
+                lastTap = now;
+            });
+
+            layer.addEventListener('wheel', (e) => { e.preventDefault(); applyZoom(state.zoomLevel + (e.deltaY > 0 ? -0.3 : 0.3)); }, { passive: false });
+
+            layer.addEventListener('click', (e) => {
+                const rect = layer.getBoundingClientRect();
+                const x = (e.clientX - rect.left) / rect.width;
+                const y = (e.clientY - rect.top) / rect.height;
+                for (const target of state.targets) {
+                    if (target.opacity < 0.3) continue;
+                    if (x >= target.bbox[0] && x <= target.bbox[0] + target.bbox[2] &&
+                        y >= target.bbox[1] && y <= target.bbox[1] + target.bbox[3]) {
+                        autoZoomToTarget(target.id); return;
+                    }
+                }
+            });
+        }
+
+        function setupButtons() {
+            elements.btnReset.addEventListener('click', () => { applyZoom(1, 0.5, 0.5); showToast('ZOOM RESET'); });
+            elements.btnSensitivity.addEventListener('click', () => {
+                state.highSensitivity = !state.highSensitivity;
+                elements.btnSensitivity.classList.toggle('active', state.highSensitivity);
+                showToast(state.highSensitivity ? '⚡ HIGH SENSITIVITY ON' : 'NORMAL SENSITIVITY');
+            });
+            elements.btnCapture.addEventListener('click', () => captureTarget());
+            elements.btnPipToggle.addEventListener('click', () => {
+                state.pipEnabled = !state.pipEnabled;
+                elements.btnPipToggle.classList.toggle('active', state.pipEnabled);
+                updatePiP(); showToast(state.pipEnabled ? 'PiP ENABLED' : 'PiP DISABLED');
+            });
+            elements.zoomSlider.addEventListener('input', (e) => applyZoom(parseFloat(e.target.value)));
+        }
+
+        function updateFPS() {
+            const now = performance.now();
+            const delta = now - state.lastFrameTime;
+            state.lastFrameTime = now;
+            if (delta > 0) {
+                state.fpsHistory.push(1000 / delta);
+                if (state.fpsHistory.length > 30) state.fpsHistory.shift();
+                state.fps = Math.round(state.fpsHistory.reduce((a, b) => a + b) / state.fpsHistory.length);
+            }
+            elements.fpsCounter.textContent = state.fps;
+            elements.targetCount.textContent = state.targets.filter(t => t.visible).length;
+        }
+
+        function updateTime() {
+            elements.timeDisplay.textContent = new Date().toLocaleTimeString('en-US', { hour12: false });
+        }
+
+        async function mainLoop() {
+            if (!state.video || state.video.readyState < 2) { requestAnimationFrame(mainLoop); return; }
+            state.frameCount++; updateFPS();
+
+            const rect = elements.video.getBoundingClientRect();
+            if (rect.width !== state.displayWidth || rect.height !== state.displayHeight) {
+                state.displayWidth = rect.width; state.displayHeight = rect.height;
+                state.canvas.width = state.displayWidth; state.canvas.height = state.displayHeight;
+            }
+
+            state.detectCtx.drawImage(elements.video, 0, 0, CONFIG.DETECTION_WIDTH, CONFIG.DETECTION_HEIGHT);
+
+            if (state.frameCount - state.lastDetectionFrame >= CONFIG.DETECTION_INTERVAL) {
+                state.lastDetectionFrame = state.frameCount;
+                try {
+                    const predictions = await state.model.detect(state.detectCanvas);
+                    state.motionRegions = detectMotion();
+                    updateTargets(predictions);
+                } catch (err) { console.warn('Detection error:', err); }
+            }
+
+            render();
+            if (state.frameCount % 5 === 0) updatePiP();
+            if (state.frameCount % 60 === 0) updateTime();
+            requestAnimationFrame(mainLoop);
+        }
+
+        function registerServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                const swCode = `
+                    self.addEventListener('install', (e) => { self.skipWaiting(); });
+                    self.addEventListener('activate', (e) => { e.waitUntil(self.clients.claim()); });
+                    self.addEventListener('fetch', (e) => { e.respondWith(fetch(e.request).catch(() => new Response('Offline'))); });
+                `;
+                const blob = new Blob([swCode], { type: 'application/javascript' });
+                navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(err => console.warn('SW failed:', err));
+            }
+        }
+
+        async function init() {
+            try {
+                elements.loadingStatus.textContent = 'Starting NEXUS AI...';
+                setProgress(5, 'Initializing system...');
+                await initCamera(); setProgress(35, 'Camera ready');
+                setupCanvases(); setProgress(40, 'Rendering pipeline ready');
+                await loadModel(); setProgress(95, 'Calibrating neural networks...');
+                setupTouchHandlers(); setupButtons(); registerServiceWorker();
+                setProgress(100, 'SYSTEM ONLINE');
+                elements.loadingStatus.textContent = 'NEXUS AI Online';
+                setTimeout(() => {
+                    elements.loadingScreen.classList.add('hidden');
+                    setTimeout(() => elements.loadingScreen.remove(), 500);
+                }, 500);
+                state.lastFrameTime = performance.now();
+                updateTime(); requestAnimationFrame(mainLoop);
+            } catch (err) {
+                elements.loadingStatus.textContent = 'Error: ' + err.message;
+                elements.loadingStatus.style.color = '#ff0044';
+            }
+        }
+
+        window.addEventListener('resize', () => {
+            const rect = elements.video.getBoundingClientRect();
+            state.displayWidth = rect.width; state.displayHeight = rect.height;
+            state.canvas.width = state.displayWidth; state.canvas.height = state.displayHeight;
+        });
+
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+        else init();
+    })();
+    </script>
+</body>
+</html>
