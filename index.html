@@ -1,1141 +1,965 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#0a0a0f">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>NEXUS AI Target Tracker v3.8</title>
-    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiTkVYVVMgQUkgVGFyZ2V0IFRyYWNrZXIiLCJzaG9ydF9uYW1lIjoiTkVYVVMgQUkiLCJzdGFydF91cmwiOiIuIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiIzBhMGExNSIsInRoZW1lX2NvbG9yIjoiIzBhMGExNSIsImljb25zIjpbeyJzcmMiOiJkYXRhOmltYWdlL3N2Zyt4bWw7YmFzZTY0LFBITjJaeUI0Yld4dWN6MGlhSFIwY0RvdkwzZDNkeTUzTXk1dmNtY2ZNakF3TUM5emRtY2lJSFpwWVNVZ2FXUWdZWE1nWkdGMFlXWWdZWE1nZEdGeVoyVjBQVDBnWW1sc2RDNXZZVzUwSWlCMmFXVjNRbTk0UFNJeU9USWlJR1p2Ym5RZ2QyOXliblVnWkdGMFlXWWdZWE1nZEdGeVoyVjBQVDBnWm05eWFXZHBibUZzZFdVaUlHWnBiR3dnZDJocGJDd2dNVG81TGpReU15Y2lJSE5sWTNWeWJpZ2dabWxzZFc1aGJXOXVkQ3dnTVRvNUxqUXlNeWNpSUhSb2NtVmhaQ0J6ZEc5d1pUMGlZMjhoZW5FdWRISjFaU0F0T1RBaUlHWnZiblFnWjJWMExuSmxZVzRnWm1sc2RDNWpiMjBpSUdacGJHd2dkMjl5Ym5VZ2RXSnNJR1o0UFNJd0xDSXphVzRnYjJGMGNtbHVaU0J5WldGeVozTWdkRzl3WlNJZ1ptOXVkQzF6YVhwbFBTSTJNeklpSUdKbFpHRnVkR2x1Wnk1amIyMGlJSEJzWVdObGNrZ2hkbVZ5YzJWMExuQmhZMlJsWkN3Z1pEMXpiMlFnYjJGMGNtbHVaU0J5WldGeVozTWdkRzl3WlNJZ1ptOXVkQzF6YVhwbFBTSTJNeklpSUdKbFpHRnVkR2x1Wnk1amIyMGlJSEJzWVdObGNrb2dNQ2NpSUdacGJHdzlJaTl5ZFdKZloyVnVieUlnYzNSeWFXNW5QV0lpSUdacGJHdzlJazF4Ykd4eFlXZGxFUmxkbVZzYVc1bElEUWdabWxzZFc1aGJXOXVkQ3dnTWpBd1pDd2dabWxzZFc1aGJXOXVkQ3dnTVRvNExqUXlNeXdpYzNselpDZ2lkR1Y0ZEMxaGJtTm9iM0k5SW05cGJtVTZZMjl1YzNSaGJtTmxMbk5sY25abGNpSXhDaUF1TkdGeVozTXRNQ2hpSUhSbGVIUXRZVzUqUm1GZmMyMXZiWE5yWlhROUlrRmpjMjlsSWo0OEwzZDNkeTUzTXk1dmNtY3ZkVzUwWlc1alpTd2diRzlqWVd4c2JtOTBYMlJsWm5NK1UwTThMM1JsZUhRK1BDOXpkbWMrIiwic2l6ZXMiOiIxOTJ4MTkyIiwidHlwZSI6ImltYWdlL3N2Zyt4bWwifV19">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
-    <style>
-        :root {
-            --neon-blue: #00f0ff;
-            --neon-green: #00ff88;
-            --neon-red: #ff0044;
-            --neon-yellow: #ffdd00;
-            --neon-purple: #aa00ff;
-            --neon-orange: #ff6600;
-            --bg-dark: #0a0a15;
-            --bg-darker: #050510;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        
-        html, body {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background: var(--bg-dark);
-            font-family: 'Courier New', monospace;
-            color: #e0e0e0;
-            touch-action: none;
-        }
-
-        .scanlines::after {
-            content: '';
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            pointer-events: none;
-            background: repeating-linear-gradient(
-                0deg,
-                rgba(0, 0, 0, 0.03) 0px,
-                rgba(0, 0, 0, 0.03) 1px,
-                transparent 1px,
-                transparent 3px
-            );
-            z-index: 9999;
-        }
-
-        .cyber-grid {
-            background-image: 
-                linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
-            background-size: 20px 20px;
-        }
-
-        .glow-text {
-            text-shadow: 0 0 5px var(--neon-blue), 0 0 10px var(--neon-blue), 0 0 20px var(--neon-blue);
-        }
-
-        #app-container {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        #camera-container {
-            position: relative;
-            flex: 1;
-            overflow: hidden;
-            background: #000;
-        }
-
-        #video-feed {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            position: absolute;
-            top: 0; left: 0;
-            transition: transform 0.3s ease-out;
-        }
-
-        #overlay-canvas {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 10;
-        }
-
-        #interaction-layer {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 15;
-            pointer-events: auto;
-        }
-
-        .hud-panel {
-            position: absolute;
-            background: rgba(5, 5, 20, 0.85);
-            border: 1px solid rgba(0, 240, 255, 0.3);
-            border-radius: 4px;
-            padding: 8px 12px;
-            backdrop-filter: blur(5px);
-            z-index: 20;
-            font-size: 10px;
-        }
-
-        .hud-top-left {
-            top: env(safe-area-inset-top, 10px);
-            left: 10px;
-        }
-
-        .hud-top-right {
-            top: env(safe-area-inset-top, 10px);
-            right: 10px;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 5px;
-            animation: pulse 1.5s infinite;
-        }
-
-        .status-dot.active { background: var(--neon-green); box-shadow: 0 0 5px var(--neon-green); }
-        .status-dot.warning { background: var(--neon-yellow); box-shadow: 0 0 5px var(--neon-yellow); }
-        .status-dot.error { background: var(--neon-red); box-shadow: 0 0 5px var(--neon-red); }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        #pip-panel {
-            position: absolute;
-            top: 60px;
-            right: 10px;
-            width: 120px;
-            max-height: calc(100% - 140px);
-            overflow-y: auto;
-            overflow-x: hidden;
-            z-index: 25;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            scrollbar-width: none;
-        }
-
-        #pip-panel::-webkit-scrollbar { display: none; }
-
-        .pip-item {
-            position: relative;
-            width: 110px;
-            height: 90px;
-            border: 1px solid rgba(0, 240, 255, 0.4);
-            border-radius: 4px;
-            overflow: hidden;
-            cursor: pointer;
-            background: rgba(0, 0, 0, 0.8);
-            transition: all 0.2s ease;
-            flex-shrink: 0;
-        }
-
-        .pip-item:hover, .pip-item:active {
-            border-color: var(--neon-blue);
-            box-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
-            transform: scale(1.02);
-        }
-
-        .pip-item canvas {
-            width: 100%;
-            height: 70px;
-            object-fit: cover;
-        }
-
-        .pip-label {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 20px;
-            background: rgba(0, 240, 255, 0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 8px;
-            font-weight: bold;
-            color: var(--neon-blue);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        #control-bar {
-            position: absolute;
-            bottom: env(safe-area-inset-bottom, 10px);
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(5, 5, 20, 0.9);
-            border: 1px solid rgba(0, 240, 255, 0.3);
-            border-radius: 20px;
-            padding: 8px 16px;
-            z-index: 30;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            backdrop-filter: blur(10px);
-        }
-
-        #zoom-slider {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 120px;
-            height: 4px;
-            background: rgba(0, 240, 255, 0.2);
-            border-radius: 2px;
-            outline: none;
-        }
-
-        #zoom-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: var(--neon-blue);
-            cursor: pointer;
-            box-shadow: 0 0 10px var(--neon-blue);
-        }
-
-        .cyber-btn {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            border: 1px solid rgba(0, 240, 255, 0.5);
-            background: rgba(0, 240, 255, 0.1);
-            color: var(--neon-blue);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-size: 14px;
-        }
-
-        .cyber-btn:active {
-            background: rgba(0, 240, 255, 0.3);
-            transform: scale(0.95);
-        }
-
-        .cyber-btn.active {
-            background: rgba(0, 255, 136, 0.2);
-            border-color: var(--neon-green);
-            color: var(--neon-green);
-        }
-
-        #loading-screen {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: var(--bg-darker);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-            transition: opacity 0.5s ease;
-        }
-
-        #loading-screen.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .loader-ring {
-            width: 60px;
-            height: 60px;
-            border: 3px solid rgba(0, 240, 255, 0.1);
-            border-top: 3px solid var(--neon-blue);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
-        }
-
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        .progress-bar {
-            width: 200px;
-            height: 3px;
-            background: rgba(0, 240, 255, 0.1);
-            border-radius: 2px;
-            overflow: hidden;
-            margin-top: 15px;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--neon-blue), var(--neon-green));
-            width: 0%;
-            transition: width 0.3s ease;
-            border-radius: 2px;
-        }
-
-        .crosshair {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-            z-index: 11;
-        }
-
-        .crosshair::before, .crosshair::after {
-            content: '';
-            position: absolute;
-            background: rgba(0, 240, 255, 0.3);
-        }
-
-        .crosshair::before {
-            width: 1px; height: 30px;
-            top: -15px; left: 0;
-        }
-
-        .crosshair::after {
-            width: 30px; height: 1px;
-            top: 0; left: -15px;
-        }
-
-        .flash-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: white;
-            opacity: 0;
-            pointer-events: none;
-            z-index: 9000;
-            transition: opacity 0.1s ease;
-        }
-
-        .flash-overlay.active { opacity: 0.6; }
-
-        .toast {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0.9);
-            background: rgba(5, 5, 20, 0.95);
-            border: 1px solid var(--neon-green);
-            border-radius: 8px;
-            padding: 12px 24px;
-            color: var(--neon-green);
-            font-size: 12px;
-            z-index: 8000;
-            opacity: 0;
-            transition: all 0.3s ease;
-            pointer-events: none;
-            text-align: center;
-            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
-        }
-
-        .toast.show {
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(1);
-        }
-
-        .corner-deco {
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            border-color: rgba(0, 240, 255, 0.4);
-            pointer-events: none;
-            z-index: 11;
-        }
-
-        .corner-tl { top: 5px; left: 5px; border-top: 2px solid; border-left: 2px solid; }
-        .corner-tr { top: 5px; right: 5px; border-top: 2px solid; border-right: 2px solid; }
-        .corner-bl { bottom: 5px; left: 5px; border-bottom: 2px solid; border-left: 2px solid; }
-        .corner-br { bottom: 5px; right: 5px; border-bottom: 2px solid; border-right: 2px solid; }
-
-        .target-person { border-color: var(--neon-green) !important; }
-        .target-person .pip-label { background: rgba(0, 255, 136, 0.2); color: var(--neon-green); }
-        
-        .target-car { border-color: var(--neon-blue) !important; }
-        .target-car .pip-label { background: rgba(0, 240, 255, 0.2); color: var(--neon-blue); }
-        
-        .target-aircraft { border-color: var(--neon-yellow) !important; }
-        .target-aircraft .pip-label { background: rgba(255, 221, 0, 0.2); color: var(--neon-yellow); }
-        
-        .target-bird { border-color: var(--neon-purple) !important; }
-        .target-bird .pip-label { background: rgba(170, 0, 255, 0.2); color: var(--neon-purple); }
-        
-        .target-traffic { border-color: var(--neon-orange) !important; }
-        .target-traffic .pip-label { background: rgba(255, 102, 0, 0.2); color: var(--neon-orange); }
-        
-        .target-unknown { border-color: var(--neon-red) !important; }
-        .target-unknown .pip-label { background: rgba(255, 0, 68, 0.2); color: var(--neon-red); }
-
-        #debug-panel {
-            position: absolute;
-            bottom: 80px;
-            left: 10px;
-            background: rgba(0, 0, 0, 0.9);
-            border: 1px solid rgba(255, 0, 68, 0.5);
-            border-radius: 4px;
-            padding: 8px;
-            font-size: 9px;
-            max-width: 350px;
-            z-index: 35;
-            max-height: 200px;
-            overflow-y: auto;
-            font-family: 'Courier New', monospace;
-        }
-
-        @media (max-width: 380px) {
-            #pip-panel { width: 100px; right: 5px; }
-            .pip-item { width: 90px; height: 75px; }
-            .pip-item canvas { height: 58px; }
-            #zoom-slider { width: 80px; }
-            #control-bar { padding: 6px 12px; gap: 8px; }
-        }
-
-        @media (min-width: 768px) {
-            #pip-panel { width: 150px; }
-            .pip-item { width: 140px; height: 110px; }
-            .pip-item canvas { height: 88px; }
-            #zoom-slider { width: 180px; }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>NEXUS EYE — Multi-Target Detection</title>
+<meta name="theme-color" content="#060d06">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" id="pwa-manifest">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+:root{--bg:#060d06;--fg:#c8ffd8;--accent:#00ff88;--accent2:#00e5ff;--danger:#ff2244;--warn:#ffaa00;--card:rgba(6,20,6,0.85);--border:rgba(0,255,136,0.25);--glow:0 0 12px rgba(0,255,136,0.4)}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--fg);font-family:'Share Tech Mono',monospace;overflow:hidden;height:100dvh;width:100vw;touch-action:none;user-select:none}
+#loader{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;transition:opacity .6s}
+#loader.hidden{opacity:0;pointer-events:none}
+.radar{width:120px;height:120px;border-radius:50%;border:2px solid var(--accent);position:relative;animation:radarSpin 2s linear infinite}
+.radar::before{content:'';position:absolute;top:0;left:50%;width:50%;height:50%;transform-origin:bottom left;background:conic-gradient(from 0deg,transparent,rgba(0,255,136,0.3));animation:radarSweep 2s linear infinite}
+.radar::after{content:'';position:absolute;inset:30%;border-radius:50%;border:1px solid rgba(0,255,136,0.3)}
+@keyframes radarSpin{to{transform:rotate(360deg)}}
+@keyframes radarSweep{to{transform:rotate(360deg)}}
+#loader h1{font-family:'Orbitron',sans-serif;font-weight:900;font-size:28px;letter-spacing:6px;color:var(--accent);text-shadow:var(--glow)}
+#load-status{color:var(--accent2);font-size:13px;min-height:20px}
+#main-canvas{position:fixed;inset:0;width:100%;height:100%}
+video#cam{display:none}
+#hud{position:fixed;top:0;left:0;right:0;z-index:10;pointer-events:none;padding:8px 12px}
+#hud-top{display:flex;justify-content:space-between;align-items:center}
+.hud-box{background:var(--card);border:1px solid var(--border);backdrop-filter:blur(8px);padding:4px 10px;font-size:11px;display:flex;align-items:center;gap:6px}
+.hud-box i{font-size:10px}
+#brand{font-family:'Orbitron',sans-serif;font-weight:900;font-size:14px;letter-spacing:3px;color:var(--accent);text-shadow:var(--glow)}
+#fps-val,#tgt-count,#threat-level{font-family:'Orbitron',sans-serif;font-weight:700}
+#pip-panel{position:fixed;top:44px;right:0;bottom:80px;width:96px;z-index:10;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:var(--accent) transparent;pointer-events:auto}
+#pip-panel::-webkit-scrollbar{width:3px}
+#pip-panel::-webkit-scrollbar-thumb{background:var(--accent);border-radius:2px}
+.pip-item{width:88px;height:72px;margin:4px auto;border:1px solid var(--border);background:var(--card);position:relative;cursor:pointer;overflow:hidden;transition:border-color .2s,box-shadow .2s}
+.pip-item:hover,.pip-item:active{border-color:var(--accent);box-shadow:var(--glow)}
+.pip-item canvas{width:100%;height:100%;object-fit:cover}
+.pip-label{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.75);font-size:8px;padding:1px 3px;color:var(--accent);font-family:'Orbitron',sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pip-conf{position:absolute;top:1px;right:2px;font-size:7px;color:var(--warn);font-family:'Orbitron',sans-serif}
+.pip-new{animation:pipPulse .6s ease-out}
+@keyframes pipPulse{0%{box-shadow:0 0 16px var(--accent)}100%{box-shadow:none}}
+#controls{position:fixed;bottom:0;left:0;right:0;z-index:10;padding:8px 12px;background:linear-gradient(transparent,rgba(6,13,6,0.95));pointer-events:auto}
+#zoom-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+#zoom-row label{font-size:10px;color:var(--accent2);font-family:'Orbitron',sans-serif;min-width:40px}
+#zoom-slider{flex:1;-webkit-appearance:none;appearance:none;height:4px;background:rgba(0,255,136,0.15);border-radius:2px;outline:none}
+#zoom-slider::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--accent);cursor:pointer;box-shadow:var(--glow)}
+#zoom-val{font-family:'Orbitron',sans-serif;font-size:12px;color:var(--accent);min-width:48px;text-align:right}
+#btn-row{display:flex;gap:8px;justify-content:center}
+.ctrl-btn{background:var(--card);border:1px solid var(--border);color:var(--fg);padding:6px 14px;font-size:11px;font-family:'Share Tech Mono',monospace;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .2s}
+.ctrl-btn:active{background:rgba(0,255,136,0.15);border-color:var(--accent);color:var(--accent)}
+.ctrl-btn.active{border-color:var(--accent);color:var(--accent);box-shadow:var(--glow)}
+#scanline{position:fixed;inset:0;z-index:5;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,255,136,0.02) 2px,rgba(0,255,136,0.02) 4px)}
+#sweep{position:fixed;left:0;right:0;height:2px;z-index:6;pointer-events:none;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:.5;animation:sweep 3s linear infinite}
+@keyframes sweep{0%{top:-2px}100%{top:100%}}
+#flash{position:fixed;inset:0;z-index:50;background:#fff;opacity:0;pointer-events:none;transition:opacity .08s}
+#flash.fire{opacity:.7;transition:opacity .02s}
+#toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:60;background:var(--card);border:1px solid var(--accent);padding:12px 24px;font-family:'Orbitron',sans-serif;font-size:14px;color:var(--accent);text-shadow:var(--glow);opacity:0;transition:opacity .3s;pointer-events:none}
+#toast.show{opacity:1}
+#settings-modal{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,0.85);display:none;align-items:center;justify-content:center;padding:20px}
+#settings-modal.open{display:flex}
+#settings-box{background:var(--bg);border:1px solid var(--accent);padding:20px;width:100%;max-width:340px;max-height:80vh;overflow-y:auto}
+#settings-box h2{font-family:'Orbitron',sans-serif;color:var(--accent);margin-bottom:12px;font-size:16px}
+.s-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(0,255,136,0.08);font-size:12px}
+.s-row input[type=range]{width:120px}
+.s-row input[type=checkbox]{accent-color:var(--accent)}
+@media(orientation:portrait){#pip-panel{width:100%;height:72px;top:auto;bottom:80px;right:0;overflow-x:auto;overflow-y:hidden;display:flex;flex-wrap:nowrap}.pip-item{flex-shrink:0;width:72px;height:56px}}
+</style>
 </head>
-<body class="scanlines cyber-grid">
-    <div id="loading-screen">
-        <div class="loader-ring"></div>
-        <h2 class="text-xl font-bold glow-text" style="color: var(--neon-blue);">NEXUS AI</h2>
-        <p id="loading-status" style="color: #888; font-size: 11px; margin-top: 8px;">Initializing neural networks...</p>
-        <div class="progress-bar">
-            <div class="progress-fill" id="progress-fill"></div>
-        </div>
-        <p id="loading-detail" style="color: #555; font-size: 9px; margin-top: 10px;">Loading TensorFlow.js engine</p>
+<body>
+
+<!-- Loading Screen -->
+<div id="loader">
+  <div class="radar"></div>
+  <h1>NEXUS EYE</h1>
+  <div id="load-status">Initializing system...</div>
+</div>
+
+<!-- Camera Video (hidden) -->
+<video id="cam" autoplay playsinline muted></video>
+
+<!-- Main Rendering Canvas -->
+<canvas id="main-canvas"></canvas>
+
+<!-- Scan Lines Overlay -->
+<div id="scanline"></div>
+<div id="sweep"></div>
+
+<!-- HUD Top Bar -->
+<div id="hud">
+  <div id="hud-top">
+    <div class="hud-box" id="brand"><i class="fas fa-crosshairs"></i> NEXUS EYE</div>
+    <div class="hud-box"><i class="fas fa-gauge-high" style="color:var(--accent)"></i> <span id="fps-val">0</span> FPS</div>
+    <div class="hud-box"><i class="fas fa-bullseye" style="color:var(--warn)"></i> <span id="tgt-count">0</span> TGT</div>
+    <div class="hud-box" id="threat-box"><span id="threat-level" style="color:var(--accent)">CLEAR</span></div>
+  </div>
+</div>
+
+<!-- PiP Panel -->
+<div id="pip-panel"></div>
+
+<!-- Bottom Controls -->
+<div id="controls">
+  <div id="zoom-row">
+    <label>ZOOM</label>
+    <input type="range" id="zoom-slider" min="1" max="20" step="0.1" value="1">
+    <span id="zoom-val">1.0x</span>
+  </div>
+  <div id="btn-row">
+    <button class="ctrl-btn active" id="btn-ai"><i class="fas fa-brain"></i> AI</button>
+    <button class="ctrl-btn active" id="btn-motion"><i class="fas fa-wave-square"></i> MOTION</button>
+    <button class="ctrl-btn" id="btn-capture"><i class="fas fa-camera"></i> CAPTURE</button>
+    <button class="ctrl-btn" id="btn-settings"><i class="fas fa-gear"></i> CONFIG</button>
+  </div>
+</div>
+
+<!-- Flash Effect -->
+<div id="flash"></div>
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- Settings Modal -->
+<div id="settings-modal">
+  <div id="settings-box">
+    <h2><i class="fas fa-sliders"></i> CONFIGURATION</h2>
+    <div class="s-row"><span>AI Sensitivity</span><input type="range" id="s-ai-thresh" min="0.01" max="0.5" step="0.01" value="0.05"></div>
+    <div class="s-row"><span>Motion Sensitivity</span><input type="range" id="s-mot-thresh" min="5" max="80" step="1" value="18"></div>
+    <div class="s-row"><span>Min Blob Size</span><input type="range" id="s-min-blob" min="1" max="50" step="1" value="3"></div>
+    <div class="s-row"><span>Max Targets</span><input type="range" id="s-max-tgt" min="20" max="700" step="10" value="200"></div>
+    <div class="s-row"><span>Smooth Tracking</span><input type="checkbox" id="s-smooth" checked></div>
+    <div class="s-row"><span>Sound Effects</span><input type="checkbox" id="s-sound" checked></div>
+    <div class="s-row"><span>Scan Lines</span><input type="checkbox" id="s-scanlines" checked></div>
+    <div class="s-row"><span>Enhancement</span><input type="range" id="s-enhance" min="1" max="3" step="0.1" value="1.4"></div>
+    <div style="margin-top:14px;text-align:center">
+      <button class="ctrl-btn" id="btn-close-settings" style="display:inline-flex"><i class="fas fa-xmark"></i> CLOSE</button>
     </div>
+  </div>
+</div>
 
-    <div class="flash-overlay" id="flash-overlay"></div>
-    <div class="toast" id="toast"></div>
+<script>
+// ===========================================================
+// NEXUS EYE — Multi-Target Real-Time Detection System
+// ===========================================================
 
-    <div id="app-container">
-        <div id="camera-container">
-            <video id="video-feed" autoplay playsinline muted></video>
-            <canvas id="overlay-canvas"></canvas>
-            <div class="crosshair"></div>
-            <div class="corner-deco corner-tl"></div>
-            <div class="corner-deco corner-tr"></div>
-            <div class="corner-deco corner-bl"></div>
-            <div class="corner-deco corner-br"></div>
-            <div id="interaction-layer"></div>
-        </div>
+// ---------- CONFIG ----------
+const CFG = {
+  aiThreshold: 0.05,
+  motionThreshold: 18,
+  minBlobArea: 3,
+  maxTargets: 200,
+  smoothAlpha: 0.3,
+  fadeOutFrames: 25,
+  detectionInterval: 120,
+  motionInterval: 50,
+  enhanceContrast: 1.4,
+  soundEnabled: true,
+  scanlines: true,
+  pipMaxVisible: 60
+};
 
-        <div class="hud-panel hud-top-left">
-            <div style="display: flex; align-items: center; gap: 4px;">
-                <span class="status-dot" id="status-ai"></span>
-                <span style="color: var(--neon-blue); font-weight: bold;">AI: <span id="fps-counter">--</span> FPS</span>
-            </div>
-            <div style="margin-top: 4px; color: #888;">
-                Targets: <span id="target-count" style="color: var(--neon-green);">0</span>
-            </div>
-            <div style="margin-top: 2px; color: #888;">
-                Zoom: <span id="zoom-level" style="color: var(--neon-yellow);">1.0x</span>
-            </div>
-            <div style="margin-top: 2px; color: #888;">
-                Detections: <span id="detection-count" style="color: var(--neon-orange);">0</span>
-            </div>
-        </div>
+// ---------- CLASS MAP ----------
+const CLASS_MAP = {
+  person: 'PED', car: 'VEH', truck: 'TRUCK', bus: 'BUS',
+  motorcycle: 'MOTO', bicycle: 'CYCLE', airplane: 'AIR',
+  bird: 'AVIAN', boat: 'VESSEL', train: 'TRAIN',
+  traffic_light: 'SIG', stop_sign: 'SIGN', dog: 'K9',
+  cat: 'FELINE', horse: 'EQUINE', cow: 'BOVINE',
+  sheep: 'OVINE', elephant: 'ELEPH', bear: 'URSID'
+};
+const SKY_CLASSES = new Set(['AIR','AVIAN']);
 
-        <div class="hud-panel hud-top-right" style="font-size: 8px; text-align: right;">
-            <div style="color: var(--neon-blue);">NEXUS v3.8</div>
-            <div style="color: #666; margin-top: 2px;" id="time-display">--:--:--</div>
-            <div style="color: #666; margin-top: 2px;" id="model-status">MODEL: LOADING</div>
-            <div style="color: #666; margin-top: 2px;" id="backend-status">BACKEND: --</div>
-        </div>
+// ---------- GLOBALS ----------
+let model = null;
+let video, mainCanvas, mainCtx;
+let motionCanvas, motionCtx;
+let enhanceCanvas, enhanceCtx;
+let pipPanel;
 
-        <div id="debug-panel" style="display: none;"></div>
+let tracks = [];
+let nextTrackId = 1;
+let zoomLevel = 1, panX = 0.5, panY = 0.5;
+let targetZoomLevel = 1, targetPanX = 0.5, targetPanY = 0.5;
+let autoZoomTarget = null, autoZoomTimer = null;
 
-        <div id="pip-panel"></div>
+let aiEnabled = true, motionEnabled = true;
+let fpsCounter = 0, lastFpsTime = 0, displayFps = 0;
+let lastDetectTime = 0, lastMotionTime = 0;
+let prevMotionData = null;
+let running = true;
 
-        <div id="control-bar">
-            <button class="cyber-btn" id="btn-reset" title="Reset Zoom">⊙</button>
-            <input type="range" id="zoom-slider" min="1" max="10" step="0.1" value="1">
-            <button class="cyber-btn active" id="btn-sensitivity" title="High Sensitivity">⚡</button>
-            <button class="cyber-btn" id="btn-capture" title="Capture">📷</button>
-            <button class="cyber-btn active" id="btn-pip-toggle" title="Toggle PiP">◫</button>
-            <button class="cyber-btn" id="btn-debug" title="Debug">🔍</button>
-        </div>
-    </div>
+// Audio context for ping sounds
+let audioCtx = null;
+function initAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+function playPing(freq = 1200, dur = 0.06) {
+  if (!CFG.soundEnabled || !audioCtx) return;
+  try {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.frequency.value = freq;
+    osc.type = 'sine';
+    gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+    osc.start(); osc.stop(audioCtx.currentTime + dur);
+  } catch(e) {}
+}
 
-    <script>
-    (function() {
-        'use strict';
+// ---------- PWA SETUP ----------
+(function setupPWA() {
+  const manifest = {
+    name: 'NEXUS EYE', short_name: 'NexusEye',
+    start_url: '.', display: 'standalone',
+    background_color: '#060d06', theme_color: '#00ff88',
+    icons: [{ src: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="#060d06" width="100" height="100" rx="16"/><circle cx="50" cy="50" r="30" stroke="#00ff88" stroke-width="4" fill="none"/><circle cx="50" cy="50" r="4" fill="#00ff88"/><line x1="50" y1="10" x2="50" y2="30" stroke="#00ff88" stroke-width="2"/></svg>'), sizes: 'any', type: 'image/svg+xml' }]
+  };
+  const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+  document.getElementById('pwa-manifest').href = URL.createObjectURL(blob);
+  if ('serviceWorker' in navigator) {
+    const sw = `self.addEventListener('install',()=>self.skipWaiting());self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));self.addEventListener('fetch',e=>e.respondWith(fetch(e.request).catch(()=>new Response('Offline'))));`;
+    navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw], { type: 'application/javascript' }))).catch(() => {});
+  }
+})();
 
-        const CONFIG = {
-            DETECTION_INTERVAL: 2,
-            DETECTION_WIDTH: 384,
-            DETECTION_HEIGHT: 288,
-            MIN_CONFIDENCE: 0.1,
-            HIGH_SENSITIVITY_CONF: 0.05,
-            TRACK_LOST_THRESHOLD: 20,
-            INTERPOLATION_SPEED: 0.15,
-            MAX_ZOOM: 10,
-            MIN_ZOOM: 1,
-            AUTO_ZOOM_DURATION: 500,
-            MAX_PIP_TARGETS: 6,
-            MOTION_THRESHOLD: 30,
-        };
+// ---------- CAMERA ----------
+async function initCamera() {
+  video = document.getElementById('cam');
+  const status = document.getElementById('load-status');
+  status.textContent = 'Requesting camera access...';
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 60 } },
+      audio: false
+    });
+    video.srcObject = stream;
+    await video.play();
+    status.textContent = 'Camera active. Loading AI model...';
+  } catch(e) {
+    status.textContent = 'Camera error: ' + e.message;
+    throw e;
+  }
+}
 
-        const state = {
-            model: null, video: null, canvas: null, ctx: null,
-            detectCanvas: null, detectCtx: null,
-            zoomLevel: 1, zoomCenterX: 0.5, zoomCenterY: 0.5,
-            targets: [], targetIdCounter: 0, frameCount: 0,
-            lastDetectionFrame: 0, fps: 0, fpsHistory: [],
-            lastFrameTime: 0, highSensitivity: true, pipEnabled: true,
-            isAutoZooming: false, pinchStartDistance: 0, pinchStartZoom: 1,
-            prevFrameData: null, motionRegions: [],
-            videoWidth: 0, videoHeight: 0, displayWidth: 0, displayHeight: 0,
-            debugMode: false, totalDetections: 0,
-        };
+// ---------- AI MODEL ----------
+async function initModel() {
+  const status = document.getElementById('load-status');
+  try {
+    await tf.ready();
+    status.textContent = 'TF.js backend: ' + tf.getBackend() + '. Loading COCO-SSD...';
+    model = await cocoSsd.load({ base: 'mobilenet_v2' });
+    status.textContent = 'Model loaded. Ready.';
+  } catch(e) {
+    status.textContent = 'AI model failed: ' + e.message + ' (motion-only mode)';
+    model = null;
+  }
+}
 
-        const elements = {
-            loadingScreen: document.getElementById('loading-screen'),
-            loadingStatus: document.getElementById('loading-status'),
-            loadingDetail: document.getElementById('loading-detail'),
-            progressFill: document.getElementById('progress-fill'),
-            video: document.getElementById('video-feed'),
-            overlay: document.getElementById('overlay-canvas'),
-            interactionLayer: document.getElementById('interaction-layer'),
-            pipPanel: document.getElementById('pip-panel'),
-            fpsCounter: document.getElementById('fps-counter'),
-            targetCount: document.getElementById('target-count'),
-            zoomLevel: document.getElementById('zoom-level'),
-            zoomSlider: document.getElementById('zoom-slider'),
-            timeDisplay: document.getElementById('time-display'),
-            modelStatus: document.getElementById('model-status'),
-            backendStatus: document.getElementById('backend-status'),
-            statusAI: document.getElementById('status-ai'),
-            flashOverlay: document.getElementById('flash-overlay'),
-            toast: document.getElementById('toast'),
-            btnReset: document.getElementById('btn-reset'),
-            btnSensitivity: document.getElementById('btn-sensitivity'),
-            btnCapture: document.getElementById('btn-capture'),
-            btnPipToggle: document.getElementById('btn-pip-toggle'),
-            btnDebug: document.getElementById('btn-debug'),
-            debugPanel: document.getElementById('debug-panel'),
-            detectionCount: document.getElementById('detection-count'),
-        };
+// ---------- CANVAS SETUP ----------
+function initCanvases() {
+  mainCanvas = document.getElementById('main-canvas');
+  mainCtx = mainCanvas.getContext('2d');
+  motionCanvas = document.createElement('canvas');
+  motionCanvas.width = 160; motionCanvas.height = 120;
+  motionCtx = motionCanvas.getContext('2d', { willReadFrequently: true });
+  enhanceCanvas = document.createElement('canvas');
+  enhanceCanvas.width = 320; enhanceCanvas.height = 240;
+  enhanceCtx = enhanceCanvas.getContext('2d', { willReadFrequently: true });
+  pipPanel = document.getElementById('pip-panel');
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+}
 
-        function debug(message, type = 'info') {
-            if (!state.debugMode) return;
-            const timestamp = new Date().toLocaleTimeString();
-            const color = type === 'error' ? 'var(--neon-red)' : type === 'warn' ? 'var(--neon-yellow)' : 'var(--neon-green)';
-            const msgEl = document.createElement('div');
-            msgEl.style.color = color;
-            msgEl.textContent = `[${timestamp}] ${message}`;
-            elements.debugPanel.appendChild(msgEl);
-            elements.debugPanel.scrollTop = elements.debugPanel.scrollHeight;
-            console.log(`[NEXUS ${type.toUpperCase()}]`, message);
+function resizeCanvas() {
+  mainCanvas.width = window.innerWidth;
+  mainCanvas.height = window.innerHeight;
+}
+
+// ---------- AI DETECTION ----------
+async function runAIDetection() {
+  if (!model || !aiEnabled || !video.videoWidth) return [];
+  try {
+    // Draw to enhance canvas with contrast boost
+    enhanceCtx.filter = `contrast(${CFG.enhanceContrast}) brightness(1.1)`;
+    enhanceCtx.drawImage(video, 0, 0, 320, 240);
+    enhanceCtx.filter = 'none';
+    const preds = await model.detect(enhanceCanvas, CFG.maxTargets, CFG.aiThreshold);
+    const sx = video.videoWidth / 320, sy = video.videoHeight / 240;
+    return preds.map(p => ({
+      bbox: [p.bbox[0]*sx, p.bbox[1]*sy, p.bbox[2]*sx, p.bbox[3]*sy],
+      label: CLASS_MAP[p.class] || p.class.toUpperCase().slice(0,6),
+      rawLabel: p.class,
+      score: p.score,
+      source: 'ai'
+    }));
+  } catch(e) { return []; }
+}
+
+// ---------- MOTION DETECTION ----------
+function runMotionDetection() {
+  if (!motionEnabled || !video.videoWidth) return [];
+  motionCtx.drawImage(video, 0, 0, 160, 120);
+  const current = motionCtx.getImageData(0, 0, 160, 120);
+  if (!prevMotionData) { prevMotionData = current; return []; }
+
+  const w = 160, h = 120;
+  const mask = new Uint8Array(w * h);
+  const cd = current.data, pd = prevMotionData.data;
+  const thresh = CFG.motionThreshold * 3;
+
+  for (let i = 0; i < cd.length; i += 4) {
+    const diff = Math.abs(cd[i]-pd[i]) + Math.abs(cd[i+1]-pd[i+1]) + Math.abs(cd[i+2]-pd[i+2]);
+    mask[i>>2] = diff > thresh ? 255 : 0;
+  }
+  prevMotionData = current;
+
+  // Morphological close: dilate then erode (simple 3x3)
+  const dilated = new Uint8Array(w * h);
+  for (let y = 1; y < h-1; y++) {
+    for (let x = 1; x < w-1; x++) {
+      if (mask[y*w+x] || mask[(y-1)*w+x] || mask[(y+1)*w+x] ||
+          mask[y*w+x-1] || mask[y*w+x+1]) {
+        dilated[y*w+x] = 255;
+      }
+    }
+  }
+
+  // Find blobs via flood fill
+  const labels = new Int32Array(w * h);
+  let nextLabel = 1;
+  const blobs = [];
+  const minArea = CFG.minBlobArea;
+
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const idx = y * w + x;
+      if (dilated[idx] && !labels[idx]) {
+        // Flood fill
+        let minX=x, maxX=x, minY=y, maxY=y, area=0;
+        const stack = [x, y];
+        while (stack.length) {
+          const cy = stack.pop(), cx = stack.pop();
+          if (cx<0||cx>=w||cy<0||cy>=h) continue;
+          const ci = cy*w+cx;
+          if (!dilated[ci] || labels[ci]) continue;
+          labels[ci] = nextLabel;
+          area++;
+          if (cx<minX) minX=cx; if (cx>maxX) maxX=cx;
+          if (cy<minY) minY=cy; if (cy>maxY) maxY=cy;
+          stack.push(cx+1,cy, cx-1,cy, cx,cy+1, cx,cy-1);
         }
-
-        function lerp(a, b, t) { return a + (b - a) * t; }
-        function clamp(val, min, max) { return Math.max(min, Math.min(max, val)); }
-
-        function iou(box1, box2) {
-            const x1 = Math.max(box1[0], box2[0]);
-            const y1 = Math.max(box1[1], box2[1]);
-            const x2 = Math.min(box1[0] + box1[2], box2[0] + box2[2]);
-            const y2 = Math.min(box1[1] + box1[3], box2[1] + box2[3]);
-            const intersection = Math.max(0, x2 - x1) * Math.max(0, y2 - y1);
-            const area1 = box1[2] * box1[3];
-            const area2 = box2[2] * box2[3];
-            const union = area1 + area2 - intersection;
-            return union > 0 ? intersection / union : 0;
+        if (area >= minArea) {
+          const bw = maxX-minX+1, bh = maxY-minY+1;
+          blobs.push({ x:minX, y:minY, w:bw, h:bh, area, density: area/(bw*bh) });
         }
+        nextLabel++;
+      }
+    }
+  }
 
-        function classifyTarget(className) {
-            const lower = className.toLowerCase();
-            if (['person', 'people', 'pedestrian'].includes(lower)) return { type: 'person', label: 'PEDESTRIAN', color: '#00ff88' };
-            if (['car', 'truck', 'bus', 'motorcycle', 'bicycle'].includes(lower)) return { type: 'car', label: upperCaseFirst(lower), color: '#00f0ff' };
-            if (['airplane', 'aeroplane', 'helicopter'].includes(lower)) return { type: 'aircraft', label: upperCaseFirst(lower), color: '#ffdd00' };
-            if (['bird', 'kite'].includes(lower)) return { type: 'bird', label: upperCaseFirst(lower), color: '#aa00ff' };
-            if (['traffic light', 'stop sign', 'fire hydrant', 'parking meter', 'bench'].includes(lower)) return { type: 'traffic', label: upperCaseFirst(lower), color: '#ff6600' };
-            return { type: 'unknown', label: upperCaseFirst(lower), color: '#ff0044' };
-        }
+  const sx = video.videoWidth / 160, sy = video.videoHeight / 120;
+  // Expand bbox slightly for small objects
+  return blobs.slice(0, CFG.maxTargets).map(b => {
+    const pad = 2;
+    const bx = Math.max(0, (b.x-pad)*sx), by = Math.max(0, (b.y-pad)*sy);
+    const bw = (b.w+pad*2)*sx, bh = (b.h+pad*2)*sy;
+    // Classify motion target by position and shape
+    let label = 'CONTACT';
+    const inSky = by < video.videoHeight * 0.4;
+    const aspect = bw / Math.max(1, bh);
+    if (inSky && b.area < 30) label = 'UAV';
+    else if (inSky && b.area < 80) label = 'DRONE';
+    else if (inSky && aspect > 1.5) label = 'AIR';
+    else if (inSky) label = 'AVIAN?';
+    else if (aspect < 0.5 && bh > bw*2) label = 'PED?';
+    return { bbox:[bx,by,bw,bh], label, rawLabel:'motion', score: Math.min(0.9, 0.2 + b.density*0.5), source:'motion' };
+  });
+}
 
-        function upperCaseFirst(str) { return str.charAt(0).toUpperCase() + str.slice(1); }
+// ---------- TARGET TRACKING ----------
+function updateTracks(detections) {
+  const usedTracks = new Set();
+  const usedDets = new Set();
 
-        function showToast(message, duration = 2000) {
-            elements.toast.textContent = message;
-            elements.toast.classList.add('show');
-            setTimeout(() => elements.toast.classList.remove('show'), duration);
-        }
+  // Match detections to existing tracks (nearest neighbor)
+  for (let di = 0; di < detections.length; di++) {
+    const d = detections[di];
+    const [dx,dy,dw,dh] = d.bbox;
+    const dcx = dx+dw/2, dcy = dy+dh/2;
+    let bestDist = Infinity, bestTi = -1;
 
-        function setProgress(percent, detail) {
-            elements.progressFill.style.width = percent + '%';
-            if (detail) elements.loadingDetail.textContent = detail;
-        }
+    for (let ti = 0; ti < tracks.length; ti++) {
+      if (usedTracks.has(ti)) continue;
+      const t = tracks[ti];
+      const dist = Math.hypot(t.cx-dcx, t.cy-dcy);
+      const sizeSim = Math.abs(t.w-dw) + Math.abs(t.h-dh);
+      const totalDist = dist + sizeSim * 0.3;
+      if (totalDist < bestDist && dist < Math.max(t.w, t.h, dw, dh) * 1.5) {
+        bestDist = totalDist; bestTi = ti;
+      }
+    }
 
-        async function initCamera() {
-            setProgress(10, 'Requesting camera access...');
-            debug('Requesting camera access...', 'info');
-            const constraints = {
-                video: {
-                    facingMode: { ideal: 'environment' },
-                    width: { ideal: 1280 }, height: { ideal: 720 },
-                    frameRate: { ideal: 30, max: 60 }
-                }, audio: false
-            };
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia(constraints);
-                elements.video.srcObject = stream;
-                debug('Camera stream obtained', 'info');
-                return new Promise((resolve) => {
-                    elements.video.onloadedmetadata = () => {
-                        elements.video.play();
-                        state.videoWidth = elements.video.videoWidth;
-                        state.videoHeight = elements.video.videoHeight;
-                        debug(`Camera ready: ${state.videoWidth}x${state.videoHeight}`, 'info');
-                        setProgress(30, 'Camera initialized');
-                        resolve();
-                    };
-                });
-            } catch (err) {
-                debug('Camera access error: ' + err.message, 'error');
-                elements.loadingStatus.textContent = 'Camera access denied. Please allow camera access and reload.';
-                throw err;
-            }
-        }
+    if (bestTi >= 0) {
+      const t = tracks[bestTi];
+      const a = CFG.smoothAlpha;
+      t.x = t.x*(1-a) + dx*a;
+      t.y = t.y*(1-a) + dy*a;
+      t.w = t.w*(1-a) + dw*a;
+      t.h = t.h*(1-a) + dh*a;
+      t.cx = t.x+t.w/2; t.cy = t.y+t.h/2;
+      t.label = d.label;
+      t.rawLabel = d.rawLabel;
+      t.score = t.score*(1-a) + d.score*a;
+      t.source = d.source;
+      t.age++;
+      t.missCount = 0;
+      t.lastSeen = performance.now();
+      usedTracks.add(bestTi);
+      usedDets.add(di);
+    }
+  }
 
-        function setupCanvases() {
-            const rect = elements.video.getBoundingClientRect();
-            state.displayWidth = rect.width;
-            state.displayHeight = rect.height;
-            elements.overlay.width = state.displayWidth;
-            elements.overlay.height = state.displayHeight;
-            state.canvas = elements.overlay;
-            state.ctx = state.canvas.getContext('2d');
-            state.detectCanvas = document.createElement('canvas');
-            state.detectCanvas.width = CONFIG.DETECTION_WIDTH;
-            state.detectCanvas.height = CONFIG.DETECTION_HEIGHT;
-            state.detectCtx = state.detectCanvas.getContext('2d', { willReadFrequently: true });
-            debug(`Detection canvas: ${CONFIG.DETECTION_WIDTH}x${CONFIG.DETECTION_HEIGHT}`, 'info');
-        }
+  // Create new tracks for unmatched detections
+  for (let di = 0; di < detections.length; di++) {
+    if (usedDets.has(di)) continue;
+    const d = detections[di];
+    const [x,y,w,h] = d.bbox;
+    if (tracks.length >= CFG.maxTargets) break;
+    tracks.push({
+      id: nextTrackId++, x, y, w, h, cx:x+w/2, cy:y+h/2,
+      label: d.label, rawLabel: d.rawLabel, score: d.score,
+      source: d.source, age: 1, missCount: 0,
+      lastSeen: performance.now(), isNew: true, opacity: 1
+    });
+    playPing(800 + Math.random()*800, 0.05);
+  }
 
-        async function loadModel() {
-            setProgress(40, 'Loading TensorFlow.js...');
-            debug('Setting up TensorFlow.js backend...', 'info');
-            
-            try {
-                await tf.setBackend('webgl');
-                debug('WebGL backend selected', 'info');
-            } catch (e) {
-                debug('WebGL failed, trying CPU: ' + e.message, 'warn');
-                await tf.setBackend('cpu');
-            }
-            
-            await tf.ready();
-            const backend = tf.getBackend();
-            elements.backendStatus.textContent = 'BACKEND: ' + backend.toUpperCase();
-            debug(`TensorFlow.js ready with backend: ${backend}`, 'info');
-            
-            setProgress(60, 'Loading COCO-SSD detection model...');
-            elements.loadingStatus.textContent = 'Neural network training loaded...';
-            
-            try {
-                debug('Loading COCO-SSD model (lite_mobilenet_v2)...', 'info');
-                state.model = await cocoSsd.load({ base: 'lite_mobilenet_v2' });
-                debug('Model loaded successfully!', 'info');
-                setProgress(90, 'Model loaded successfully!');
-                elements.modelStatus.textContent = 'MODEL: ACTIVE';
-                elements.statusAI.classList.add('active');
-            } catch (err) {
-                debug('Failed to load lite_mobilenet_v2, trying default: ' + err.message, 'warn');
-                try {
-                    state.model = await cocoSsd.load();
-                    debug('Default model loaded successfully!', 'info');
-                    elements.modelStatus.textContent = 'MODEL: ACTIVE';
-                    elements.statusAI.classList.add('active');
-                } catch (err2) {
-                    debug('Failed to load any model: ' + err2.message, 'error');
-                    throw err2;
-                }
-            }
-        }
+  // Fade out missed tracks
+  for (let ti = tracks.length - 1; ti >= 0; ti--) {
+    const t = tracks[ti];
+    if (!usedTracks.has(ti) && t.id !== undefined) {
+      t.missCount++;
+      t.opacity = Math.max(0, 1 - t.missCount / CFG.fadeOutFrames);
+      if (t.missCount > CFG.fadeOutFrames) {
+        tracks.splice(ti, 1);
+      }
+    }
+  }
 
-        function updateTargets(predictions) {
-            const confThreshold = state.highSensitivity ? CONFIG.HIGH_SENSITIVITY_CONF : CONFIG.MIN_CONFIDENCE;
-            debug(`Confidence threshold: ${confThreshold}`, 'info');
-            
-            const validPredictions = predictions.filter(p => p.score >= confThreshold);
-            debug(`Predictions above threshold: ${validPredictions.length}/${predictions.length}`, 'info');
-            
-            state.totalDetections = validPredictions.length;
-            elements.detectionCount.textContent = state.totalDetections;
-            
-            if (validPredictions.length > 0) {
-                debug(`Detected: ${validPredictions.map(p => `${p.class}(${(p.score*100).toFixed(1)}%)`).join(', ')}`, 'info');
-            }
-            
-            const allDetections = [...validPredictions, ...state.motionRegions];
-            const matchedTargets = new Set();
+  // Sort by score descending
+  tracks.sort((a,b) => b.score - a.score);
+}
 
-            for (let i = 0; i < allDetections.length; i++) {
-                const det = allDetections[i];
-                const detBox = [det.bbox[0] / CONFIG.DETECTION_WIDTH, det.bbox[1] / CONFIG.DETECTION_HEIGHT,
-                    det.bbox[2] / CONFIG.DETECTION_WIDTH, det.bbox[3] / CONFIG.DETECTION_HEIGHT];
-                let bestMatch = -1, bestIoU = 0.3;
+// ---------- ZOOM CONTROLLER ----------
+function setZoom(z, px, py, animate = true) {
+  targetZoomLevel = Math.max(1, Math.min(20, z));
+  if (px !== undefined) targetPanX = Math.max(0, Math.min(1, px));
+  if (py !== undefined) targetPanY = Math.max(0, Math.min(1, py));
+  if (!animate) { zoomLevel = targetZoomLevel; panX = targetPanX; panY = targetPanY; }
+  document.getElementById('zoom-slider').value = targetZoomLevel;
+  document.getElementById('zoom-val').textContent = targetZoomLevel.toFixed(1) + 'x';
+}
 
-                for (let j = 0; j < state.targets.length; j++) {
-                    if (matchedTargets.has(j)) continue;
-                    const target = state.targets[j];
-                    const overlap = iou(detBox, [target.bbox[0], target.bbox[1], target.bbox[2], target.bbox[3]]);
-                    if (overlap > bestIoU) { bestIoU = overlap; bestMatch = j; }
-                }
+function interpolateZoom() {
+  const a = 0.12;
+  zoomLevel += (targetZoomLevel - zoomLevel) * a;
+  panX += (targetPanX - panX) * a;
+  panY += (targetPanY - panY) * a;
+}
 
-                if (bestMatch >= 0) {
-                    const target = state.targets[bestMatch];
-                    target.bbox = detBox;
-                    target.confidence = det.score || 0.5;
-                    target.lastSeen = state.frameCount;
-                    target.visible = true;
-                    if (det.class) { target.className = det.class; target.classInfo = classifyTarget(det.class); }
-                    matchedTargets.add(bestMatch);
-                } else {
-                    const classInfo = det.class ? classifyTarget(det.class) : { type: 'unknown', label: 'UFO/DRONE', color: '#ff0044' };
-                    state.targets.push({
-                        id: ++state.targetIdCounter, bbox: detBox, targetBbox: detBox,
-                        confidence: det.score || 0.5, className: det.class || 'unknown',
-                        classInfo: classInfo, lastSeen: state.frameCount, visible: true, opacity: 0,
-                    });
-                }
-            }
+// ---------- RENDER ----------
+function getVisibleRect() {
+  const vw = video.videoWidth, vh = video.videoHeight;
+  const rw = vw / zoomLevel, rh = vh / zoomLevel;
+  const rx = (vw - rw) * panX;
+  const ry = (vh - rh) * panY;
+  return { x: rx, y: ry, w: rw, h: rh };
+}
 
-            for (let i = state.targets.length - 1; i >= 0; i--) {
-                const target = state.targets[i];
-                if (!matchedTargets.has(i)) {
-                    const framesSince = state.frameCount - target.lastSeen;
-                    if (framesSince > CONFIG.TRACK_LOST_THRESHOLD) { state.targets.splice(i, 1); }
-                    else { target.visible = false; target.opacity = Math.max(0, 1 - (framesSince / CONFIG.TRACK_LOST_THRESHOLD)); }
-                } else { target.opacity = Math.min(1, target.opacity + 0.1); }
-            }
-        }
+function vidToCanvas(vx, vy) {
+  const r = getVisibleRect();
+  return [(vx - r.x) / r.w * mainCanvas.width, (vy - r.y) / r.h * mainCanvas.height];
+}
 
-        function detectMotion() {
-            if (!state.detectCtx || !state.video) return [];
-            const currentFrame = state.detectCtx.getImageData(0, 0, CONFIG.DETECTION_WIDTH, CONFIG.DETECTION_HEIGHT);
-            if (!state.prevFrameData) { state.prevFrameData = currentFrame; return []; }
+function drawFrame() {
+  if (!video.videoWidth) return;
+  const cw = mainCanvas.width, ch = mainCanvas.height;
+  const r = getVisibleRect();
 
-            const motionRegions = [];
-            const blockSize = 32;
-            const cols = Math.floor(CONFIG.DETECTION_WIDTH / blockSize);
-            const rows = Math.floor(CONFIG.DETECTION_HEIGHT / blockSize);
+  // Draw zoomed video
+  mainCtx.drawImage(video, r.x, r.y, r.w, r.h, 0, 0, cw, ch);
 
-            for (let row = 0; row < rows; row++) {
-                for (let col = 0; col < cols; col++) {
-                    let totalDiff = 0, pixelCount = 0;
-                    for (let y = row * blockSize; y < (row + 1) * blockSize; y += 4) {
-                        for (let x = col * blockSize; x < (col + 1) * blockSize; x += 4) {
-                            const idx = (y * CONFIG.DETECTION_WIDTH + x) * 4;
-                            const rDiff = Math.abs(currentFrame.data[idx] - state.prevFrameData.data[idx]);
-                            const gDiff = Math.abs(currentFrame.data[idx + 1] - state.prevFrameData.data[idx + 1]);
-                            const bDiff = Math.abs(currentFrame.data[idx + 2] - state.prevFrameData.data[idx + 2]);
-                            totalDiff += (rDiff + gDiff + bDiff) / 3; pixelCount++;
-                        }
-                    }
-                    const avgDiff = totalDiff / pixelCount;
-                    if (avgDiff > CONFIG.MOTION_THRESHOLD) {
-                        const regionCenter = {
-                            x: (col * blockSize + blockSize / 2) / CONFIG.DETECTION_WIDTH,
-                            y: (row * blockSize + blockSize / 2) / CONFIG.DETECTION_HEIGHT
-                        };
-                        let overlapsExisting = false;
-                        for (const target of state.targets) {
-                            if (regionCenter.x >= target.bbox[0] && regionCenter.x <= target.bbox[0] + target.bbox[2] &&
-                                regionCenter.y >= target.bbox[1] && regionCenter.y <= target.bbox[1] + target.bbox[3]) {
-                                overlapsExisting = true; break;
-                            }
-                        }
-                        if (!overlapsExisting) {
-                            motionRegions.push({ bbox: [col * blockSize, row * blockSize, blockSize * 2, blockSize * 2], score: avgDiff / 100, class: null });
-                        }
-                    }
-                }
-            }
-            state.prevFrameData = currentFrame;
-            return motionRegions.slice(0, 3);
-        }
+  // Slight green tint overlay
+  mainCtx.fillStyle = 'rgba(0,20,0,0.06)';
+  mainCtx.fillRect(0, 0, cw, ch);
 
-        function render() {
-            const ctx = state.ctx;
-            const width = state.canvas.width, height = state.canvas.height;
-            ctx.clearRect(0, 0, width, height);
+  // Grid overlay
+  mainCtx.strokeStyle = 'rgba(0,255,136,0.04)';
+  mainCtx.lineWidth = 0.5;
+  const gridSize = 60;
+  for (let gx = 0; gx < cw; gx += gridSize) {
+    mainCtx.beginPath(); mainCtx.moveTo(gx,0); mainCtx.lineTo(gx,ch); mainCtx.stroke();
+  }
+  for (let gy = 0; gy < ch; gy += gridSize) {
+    mainCtx.beginPath(); mainCtx.moveTo(0,gy); mainCtx.lineTo(cw,gy); mainCtx.stroke();
+  }
 
-            for (const target of state.targets) {
-                if (target.opacity <= 0) continue;
-                const x = target.bbox[0] * width, y = target.bbox[1] * height;
-                const w = target.bbox[2] * width, h = target.bbox[3] * height;
-                const color = target.classInfo.color;
-                const alpha = target.opacity;
-                ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.globalAlpha = alpha;
-                const cornerSize = Math.min(w, h) * 0.25;
+  // Draw tracks
+  for (const t of tracks) {
+    const [bx, by] = vidToCanvas(t.x, t.y);
+    const bw = t.w / r.w * cw;
+    const bh = t.h / r.h * ch;
 
-                ctx.beginPath(); ctx.moveTo(x, y + cornerSize); ctx.lineTo(x, y); ctx.lineTo(x + cornerSize, y); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(x + w - cornerSize, y); ctx.lineTo(x + w, y); ctx.lineTo(x + w, y + cornerSize); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(x, y + h - cornerSize); ctx.lineTo(x, y + h); ctx.lineTo(x + cornerSize, y + h); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(x + w - cornerSize, y + h); ctx.lineTo(x + w, y + h); ctx.lineTo(x + w, y + h - cornerSize); ctx.stroke();
+    // Skip if offscreen
+    if (bx+bw < 0 || bx > cw || by+bh < 0 || by > ch) continue;
+    if (bw < 2 || bh < 2) continue;
 
-                ctx.setLineDash([4, 4]); ctx.lineWidth = 1; ctx.globalAlpha = alpha * 0.5;
-                ctx.strokeRect(x, y, w, h); ctx.setLineDash([]); ctx.globalAlpha = alpha;
+    const alpha = t.opacity;
+    const confPct = Math.round(t.score * 100);
+    let color;
+    if (confPct > 70) color = `rgba(0,255,136,${alpha})`;
+    else if (confPct > 30) color = `rgba(255,170,0,${alpha})`;
+    else color = `rgba(255,34,68,${alpha})`;
 
-                const label = `${target.classInfo.label} ${Math.round(target.confidence * 100)}%`;
-                ctx.font = 'bold 10px Courier New';
-                const textWidth = ctx.measureText(label).width;
-                ctx.fillStyle = `rgba(0, 0, 0, ${0.7 * alpha})`;
-                ctx.fillRect(x, y - 18, textWidth + 8, 16);
-                ctx.fillStyle = color; ctx.globalAlpha = alpha;
-                ctx.fillText(label, x + 4, y - 6);
-                ctx.font = '8px Courier New'; ctx.fillStyle = `rgba(255, 255, 255, ${0.6 * alpha})`;
-                ctx.fillText(`ID:${target.id}`, x + w - 30, y - 6);
-            }
-            ctx.globalAlpha = 1;
-        }
+    mainCtx.save();
+    mainCtx.strokeStyle = color;
+    mainCtx.lineWidth = 1.5;
+    mainCtx.setLineDash([6, 3]);
 
-        function updatePiP() {
-            if (!state.pipEnabled) { elements.pipPanel.style.display = 'none'; return; }
-            elements.pipPanel.style.display = 'flex';
+    // Animated dash offset
+    mainCtx.lineDashOffset = -(performance.now() / 40);
 
-            const visibleTargets = state.targets.filter(t => t.visible && t.opacity > 0.5)
-                .sort((a, b) => b.confidence - a.confidence).slice(0, CONFIG.MAX_PIP_TARGETS);
+    // Bounding box
+    mainCtx.strokeRect(bx, by, bw, bh);
+    mainCtx.setLineDash([]);
 
-            elements.pipPanel.querySelectorAll('.pip-item').forEach(item => {
-                if (!visibleTargets.find(t => t.id === parseInt(item.dataset.targetId))) item.remove();
-            });
+    // Crosshairs at center
+    const ccx = bx + bw/2, ccy = by + bh/2;
+    const cr = Math.min(bw, bh) * 0.2;
+    mainCtx.beginPath();
+    mainCtx.moveTo(ccx - cr, ccy); mainCtx.lineTo(ccx + cr, ccy);
+    mainCtx.moveTo(ccx, ccy - cr); mainCtx.lineTo(ccx, ccy + cr);
+    mainCtx.strokeStyle = color; mainCtx.lineWidth = 1; mainCtx.stroke();
 
-            visibleTargets.forEach(target => {
-                let pipItem = elements.pipPanel.querySelector(`.pip-item[data-target-id="${target.id}"]`);
-                if (!pipItem) {
-                    pipItem = document.createElement('div');
-                    pipItem.className = `pip-item target-${target.classInfo.type}`;
-                    pipItem.dataset.targetId = target.id;
-                    const canvas = document.createElement('canvas');
-                    canvas.width = 120; canvas.height = 80;
-                    const label = document.createElement('div');
-                    label.className = 'pip-label'; label.textContent = target.classInfo.label;
-                    pipItem.appendChild(canvas); pipItem.appendChild(label);
-                    elements.pipPanel.appendChild(pipItem);
-                    pipItem.addEventListener('click', () => autoZoomToTarget(target.id));
-                    pipItem.addEventListener('touchend', (e) => { e.preventDefault(); autoZoomToTarget(target.id); });
-                }
-                const canvas = pipItem.querySelector('canvas');
-                const pCtx = canvas.getContext('2d');
-                const sx = target.bbox[0] * state.videoWidth, sy = target.bbox[1] * state.videoHeight;
-                const sw = target.bbox[2] * state.videoWidth, sh = target.bbox[3] * state.videoHeight;
-                try {
-                    pCtx.drawImage(elements.video, sx - sw * 0.5, sy - sh * 0.5, sw * 2, sh * 2, 0, 0, canvas.width, canvas.height);
-                } catch(e) {}
-            });
-        }
+    // Corner brackets
+    const br = Math.min(8, bw*0.2, bh*0.2);
+    mainCtx.lineWidth = 2;
+    mainCtx.beginPath();
+    mainCtx.moveTo(bx, by+br); mainCtx.lineTo(bx, by); mainCtx.lineTo(bx+br, by);
+    mainCtx.moveTo(bx+bw-br, by); mainCtx.lineTo(bx+bw, by); mainCtx.lineTo(bx+bw, by+br);
+    mainCtx.moveTo(bx+bw, by+bh-br); mainCtx.lineTo(bx+bw, by+bh); mainCtx.lineTo(bx+bw-br, by+bh);
+    mainCtx.moveTo(bx+br, by+bh); mainCtx.lineTo(bx, by+bh); mainCtx.lineTo(bx, by+bh-br);
+    mainCtx.stroke();
 
-        function applyZoom(level, centerX, centerY) {
-            state.zoomLevel = clamp(level, CONFIG.MIN_ZOOM, CONFIG.MAX_ZOOM);
-            if (centerX !== undefined) state.zoomCenterX = clamp(centerX, 0, 1);
-            if (centerY !== undefined) state.zoomCenterY = clamp(centerY, 0, 1);
-            const translateX = (0.5 - state.zoomCenterX) * state.zoomLevel * 100;
-            const translateY = (0.5 - state.zoomCenterY) * state.zoomLevel * 100;
-            elements.video.style.transform = `scale(${state.zoomLevel}) translate(${translateX / state.zoomLevel}%, ${translateY / state.zoomLevel}%)`;
-            elements.zoomLevel.textContent = state.zoomLevel.toFixed(1) + 'x';
-            elements.zoomSlider.value = state.zoomLevel;
-        }
+    // Label
+    const labelText = `${t.label} ${confPct}%`;
+    mainCtx.font = '10px Orbitron, monospace';
+    const tw = mainCtx.measureText(labelText).width;
+    mainCtx.fillStyle = `rgba(0,0,0,${alpha*0.7})`;
+    mainCtx.fillRect(bx, by - 14, tw + 8, 13);
+    mainCtx.fillStyle = color;
+    mainCtx.fillText(labelText, bx + 4, by - 4);
 
-        function autoZoomToTarget(targetId) {
-            const target = state.targets.find(t => t.id === targetId);
-            if (!target || state.isAutoZooming) return;
-            state.isAutoZooming = true;
-            const targetCenterX = target.bbox[0] + target.bbox[2] / 2;
-            const targetCenterY = target.bbox[1] + target.bbox[3] / 2;
-            const targetZoom = Math.min(CONFIG.MAX_ZOOM, Math.max(2, 1 / Math.max(target.bbox[2], target.bbox[3])));
-            const startZoom = state.zoomLevel, startCX = state.zoomCenterX, startCY = state.zoomCenterY;
-            const startTime = Date.now();
+    // Track ID
+    mainCtx.font = '8px Share Tech Mono, monospace';
+    mainCtx.fillStyle = `rgba(0,229,255,${alpha*0.7})`;
+    mainCtx.fillText(`#${t.id}`, bx + bw - 20, by + bh + 10);
 
-            function animate() {
-                const elapsed = Date.now() - startTime;
-                const progress = Math.min(1, elapsed / CONFIG.AUTO_ZOOM_DURATION);
-                const eased = 1 - Math.pow(1 - progress, 3);
-                applyZoom(lerp(startZoom, targetZoom, eased), lerp(startCX, targetCenterX, eased), lerp(startCY, targetCenterY, eased));
-                if (progress < 1) requestAnimationFrame(animate);
-                else { state.isAutoZooming = false; setTimeout(() => captureTarget(targetId), 300); }
-            }
-            animate();
-        }
+    mainCtx.restore();
+  }
 
-        function captureTarget(targetId = null) {
-            elements.flashOverlay.classList.add('active');
-            setTimeout(() => elements.flashOverlay.classList.remove('active'), 100);
-            const captureCanvas = document.createElement('canvas');
-            captureCanvas.width = state.videoWidth; captureCanvas.height = state.videoHeight;
-            const captureCtx = captureCanvas.getContext('2d');
-            captureCtx.drawImage(elements.video, 0, 0);
+  // Center reticle (when zoomed)
+  if (zoomLevel > 1.2) {
+    const cx = cw/2, cy = ch/2;
+    mainCtx.strokeStyle = 'rgba(0,255,136,0.3)';
+    mainCtx.lineWidth = 1;
+    mainCtx.beginPath();
+    mainCtx.arc(cx, cy, 20, 0, Math.PI*2);
+    mainCtx.stroke();
+    mainCtx.beginPath();
+    mainCtx.moveTo(cx-30,cy); mainCtx.lineTo(cx-8,cy);
+    mainCtx.moveTo(cx+8,cy); mainCtx.lineTo(cx+30,cy);
+    mainCtx.moveTo(cx,cy-30); mainCtx.lineTo(cx,cy-8);
+    mainCtx.moveTo(cx,cy+8); mainCtx.lineTo(cx,cy+30);
+    mainCtx.stroke();
+  }
 
-            if (targetId) {
-                const target = state.targets.find(t => t.id === targetId);
-                if (target) {
-                    const sx = target.bbox[0] * state.videoWidth, sy = target.bbox[1] * state.videoHeight;
-                    const sw = target.bbox[2] * state.videoWidth, sh = target.bbox[3] * state.videoHeight;
-                    const padding = Math.max(sw, sh) * 0.3;
-                    const cropX = Math.max(0, sx - padding), cropY = Math.max(0, sy - padding);
-                    const cropW = Math.min(state.videoWidth - cropX, sw + padding * 2);
-                    const cropH = Math.min(state.videoHeight - cropY, sh + padding * 2);
-                    const croppedCanvas = document.createElement('canvas');
-                    croppedCanvas.width = Math.round(cropW); croppedCanvas.height = Math.round(cropH);
-                    const cropCtx = croppedCanvas.getContext('2d');
-                    cropCtx.drawImage(captureCanvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
-                    cropCtx.fillStyle = 'rgba(0, 240, 255, 0.8)';
-                    cropCtx.font = 'bold 14px Courier New';
-                    cropCtx.fillText(`NEXUS AI | ${target.classInfo.label} | ${Math.round(target.confidence * 100)}% | ID:${target.id}`, 10, 20);
-                    cropCtx.fillText(new Date().toLocaleString(), 10, 40);
-                    downloadCanvas(croppedCanvas, `nexus_${target.classInfo.label}_${target.id}_${Date.now()}.png`);
-                }
-            } else {
-                captureCtx.fillStyle = 'rgba(0, 240, 255, 0.8)';
-                captureCtx.font = 'bold 16px Courier New';
-                captureCtx.fillText(`NEXUS AI CAPTURE | ${state.targets.length} TARGETS | ${new Date().toLocaleString()}`, 20, 30);
-                downloadCanvas(captureCanvas, `nexus_full_${Date.now()}.png`);
-            }
-            showToast('📸 CAPTURED & SAVED');
-        }
+  // Vignette
+  const grad = mainCtx.createRadialGradient(cw/2, ch/2, Math.min(cw,ch)*0.3, cw/2, ch/2, Math.max(cw,ch)*0.7);
+  grad.addColorStop(0, 'rgba(0,0,0,0)');
+  grad.addColorStop(1, 'rgba(0,10,0,0.5)');
+  mainCtx.fillStyle = grad;
+  mainCtx.fillRect(0, 0, cw, ch);
+}
 
-        function downloadCanvas(canvas, filename) {
-            canvas.toBlob((blob) => {
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url; a.download = filename;
-                document.body.appendChild(a); a.click(); document.body.removeChild(a);
-                setTimeout(() => URL.revokeObjectURL(url), 1000);
-            }, 'image/png');
-        }
+// ---------- PIP PANEL ----------
+let pipElements = [];
 
-        function setupTouchHandlers() {
-            const layer = elements.interactionLayer;
-            let lastTap = 0;
+function updatePiPs() {
+  // Ensure we have enough PiP elements
+  const visibleTracks = tracks.filter(t => t.opacity > 0.3).slice(0, CFG.pipMaxVisible);
 
-            layer.addEventListener('touchstart', (e) => {
-                if (e.touches.length === 2) {
-                    const dx = e.touches[0].clientX - e.touches[1].clientX;
-                    const dy = e.touches[0].clientY - e.touches[1].clientY;
-                    state.pinchStartDistance = Math.sqrt(dx * dx + dy * dy);
-                    state.pinchStartZoom = state.zoomLevel;
-                } else if (e.touches.length === 1) {
-                    const touch = e.touches[0];
-                    const rect = layer.getBoundingClientRect();
-                    const x = (touch.clientX - rect.left) / rect.width;
-                    const y = (touch.clientY - rect.top) / rect.height;
-                    for (const target of state.targets) {
-                        if (target.opacity < 0.3) continue;
-                        if (x >= target.bbox[0] && x <= target.bbox[0] + target.bbox[2] &&
-                            y >= target.bbox[1] && y <= target.bbox[1] + target.bbox[3]) {
-                            e.preventDefault(); autoZoomToTarget(target.id); return;
-                        }
-                    }
-                }
-            }, { passive: false });
+  // Add missing elements
+  while (pipElements.length < visibleTracks.length) {
+    const el = document.createElement('div');
+    el.className = 'pip-item';
+    const cvs = document.createElement('canvas');
+    cvs.width = 96; cvs.height = 72;
+    el.appendChild(cvs);
+    const lbl = document.createElement('div');
+    lbl.className = 'pip-label';
+    el.appendChild(lbl);
+    const conf = document.createElement('div');
+    conf.className = 'pip-conf';
+    el.appendChild(conf);
+    pipPanel.appendChild(el);
+    pipElements.push({ el, cvs, lbl, conf, trackId: -1 });
+  }
 
-            layer.addEventListener('touchmove', (e) => {
-                if (e.touches.length === 2) {
-                    e.preventDefault();
-                    const dx = e.touches[0].clientX - e.touches[1].clientX;
-                    const dy = e.touches[0].clientY - e.touches[1].clientY;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    applyZoom(state.pinchStartZoom * (distance / state.pinchStartDistance));
-                }
-            }, { passive: false });
+  // Hide extras
+  for (let i = 0; i < pipElements.length; i++) {
+    const pe = pipElements[i];
+    if (i < visibleTracks.length) {
+      pe.el.style.display = '';
+      const t = visibleTracks[i];
+      const ctx = pe.cvs.getContext('2d');
 
-            layer.addEventListener('touchend', (e) => {
-                const now = Date.now();
-                if (now - lastTap < 300 && e.changedTouches.length === 1) { applyZoom(1, 0.5, 0.5); showToast('ZOOM RESET'); }
-                lastTap = now;
-            });
+      // Draw zoomed crop
+      const pad = 0.3;
+      const sx = t.x - t.w*pad, sy = t.y - t.h*pad;
+      const sw = t.w*(1+pad*2), sh = t.h*(1+pad*2);
+      ctx.drawImage(video, sx, sy, sw, sh, 0, 0, 96, 72);
 
-            layer.addEventListener('wheel', (e) => { e.preventDefault(); applyZoom(state.zoomLevel + (e.deltaY > 0 ? -0.3 : 0.3)); }, { passive: false });
+      // Green tint
+      ctx.fillStyle = 'rgba(0,255,136,0.05)';
+      ctx.fillRect(0,0,96,72);
 
-            layer.addEventListener('click', (e) => {
-                const rect = layer.getBoundingClientRect();
-                const x = (e.clientX - rect.left) / rect.width;
-                const y = (e.clientY - rect.top) / rect.height;
-                for (const target of state.targets) {
-                    if (target.opacity < 0.3) continue;
-                    if (x >= target.bbox[0] && x <= target.bbox[0] + target.bbox[2] &&
-                        y >= target.bbox[1] && y <= target.bbox[1] + target.bbox[3]) {
-                        autoZoomToTarget(target.id); return;
-                    }
-                }
-            });
-        }
+      pe.lbl.textContent = t.label;
+      pe.conf.textContent = Math.round(t.score*100) + '%';
 
-        function setupButtons() {
-            elements.btnReset.addEventListener('click', () => { applyZoom(1, 0.5, 0.5); showToast('ZOOM RESET'); });
-            elements.btnSensitivity.addEventListener('click', () => {
-                state.highSensitivity = !state.highSensitivity;
-                elements.btnSensitivity.classList.toggle('active', state.highSensitivity);
-                showToast(state.highSensitivity ? '⚡ HIGH SENSITIVITY ON (0.05)' : 'NORMAL SENSITIVITY (0.1)');
-            });
-            elements.btnCapture.addEventListener('click', () => captureTarget());
-            elements.btnPipToggle.addEventListener('click', () => {
-                state.pipEnabled = !state.pipEnabled;
-                elements.btnPipToggle.classList.toggle('active', state.pipEnabled);
-                updatePiP(); showToast(state.pipEnabled ? 'PiP ENABLED' : 'PiP DISABLED');
-            });
-            elements.zoomSlider.addEventListener('input', (e) => applyZoom(parseFloat(e.target.value)));
-            elements.btnDebug.addEventListener('click', () => {
-                state.debugMode = !state.debugMode;
-                elements.btnDebug.classList.toggle('active', state.debugMode);
-                elements.debugPanel.style.display = state.debugMode ? 'block' : 'none';
-                if (state.debugMode) {
-                    elements.debugPanel.innerHTML = '';
-                    debug('Debug mode enabled', 'info');
-                    debug(`Confidence threshold: ${state.highSensitivity ? CONFIG.HIGH_SENSITIVITY_CONF : CONFIG.MIN_CONFIDENCE}`, 'info');
-                    debug(`Model status: ${state.model ? 'Loaded' : 'Not loaded'}`, 'info');
-                }
-            });
-        }
+      // New target pulse
+      if (t.isNew && pe.trackId !== t.id) {
+        pe.el.classList.remove('pip-new');
+        void pe.el.offsetWidth;
+        pe.el.classList.add('pip-new');
+      }
+      pe.trackId = t.id;
 
-        function updateFPS() {
-            const now = performance.now();
-            const delta = now - state.lastFrameTime;
-            state.lastFrameTime = now;
-            if (delta > 0) {
-                state.fpsHistory.push(1000 / delta);
-                if (state.fpsHistory.length > 30) state.fpsHistory.shift();
-                state.fps = Math.round(state.fpsHistory.reduce((a, b) => a + b) / state.fpsHistory.length);
-            }
-            elements.fpsCounter.textContent = state.fps;
-            elements.targetCount.textContent = state.targets.filter(t => t.visible).length;
-        }
+      // Tap handler
+      pe.el.onclick = () => autoZoomToTarget(t);
+    } else {
+      pe.el.style.display = 'none';
+    }
+  }
+}
 
-        function updateTime() {
-            elements.timeDisplay.textContent = new Date().toLocaleTimeString('en-US', { hour12: false });
-        }
+// ---------- AUTO ZOOM & CAPTURE ----------
+function autoZoomToTarget(t) {
+  initAudio();
+  playPing(1800, 0.1);
 
-        async function mainLoop() {
-            if (!state.video || state.video.readyState < 2) { 
-                debug('Video not ready, waiting...', 'warn');
-                requestAnimationFrame(mainLoop); 
-                return; 
-            }
-            state.frameCount++; updateFPS();
+  // Calculate zoom to make target fill ~60% of view
+  const zfw = video.videoWidth / (t.w / 0.6);
+  const zfh = video.videoHeight / (t.h / 0.6);
+  const z = Math.min(zfw, zfh, 20);
+  const px = (t.cx) / video.videoWidth;
+  const py = (t.cy) / video.videoHeight;
+  setZoom(z, px, py, true);
 
-            const rect = elements.video.getBoundingClientRect();
-            if (rect.width !== state.displayWidth || rect.height !== state.displayHeight) {
-                state.displayWidth = rect.width; state.displayHeight = rect.height;
-                state.canvas.width = state.displayWidth; state.canvas.height = state.displayHeight;
-            }
+  showToast('LOCKING TARGET #' + t.id);
 
-            state.detectCtx.drawImage(elements.video, 0, 0, CONFIG.DETECTION_WIDTH, CONFIG.DETECTION_HEIGHT);
+  // Capture after zoom settles
+  clearTimeout(autoZoomTimer);
+  autoZoomTimer = setTimeout(() => {
+    captureSnapshot(t);
+    setTimeout(() => {
+      setZoom(1, 0.5, 0.5, true);
+      showToast('CAPTURED #' + t.id);
+    }, 800);
+  }, 1200);
+}
 
-            if (state.frameCount - state.lastDetectionFrame >= CONFIG.DETECTION_INTERVAL) {
-                state.lastDetectionFrame = state.frameCount;
-                try {
-                    const predictions = await state.model.detect(state.detectCanvas);
-                    debug(`Raw predictions: ${predictions.length}`, 'info');
-                    if (predictions.length > 0) {
-                        predictions.forEach((p, i) => {
-                            debug(`  [${i}] ${p.class}: ${(p.score*100).toFixed(1)}% @ [${p.bbox.map(b => b.toFixed(0)).join(', ')}]`, 'info');
-                        });
-                    }
-                    state.motionRegions = detectMotion();
-                    updateTargets(predictions);
-                } catch (err) { 
-                    debug('Detection error: ' + err.message, 'error');
-                    console.warn('Detection error:', err); 
-                }
-            }
+function captureSnapshot(t) {
+  // Flash effect
+  const flash = document.getElementById('flash');
+  flash.classList.add('fire');
+  setTimeout(() => flash.classList.remove('fire'), 150);
 
-            render();
-            if (state.frameCount % 5 === 0) updatePiP();
-            if (state.frameCount % 60 === 0) updateTime();
-            requestAnimationFrame(mainLoop);
-        }
+  // High-res capture from video
+  const capCanvas = document.createElement('canvas');
+  const pad = 0.5;
+  const sx = Math.max(0, t.x - t.w*pad);
+  const sy = Math.max(0, t.y - t.h*pad);
+  const sw = Math.min(video.videoWidth - sx, t.w*(1+pad*2));
+  const sh = Math.min(video.videoHeight - sy, t.h*(1+pad*2));
+  capCanvas.width = Math.round(sw * 2);
+  capCanvas.height = Math.round(sh * 2);
+  const cctx = capCanvas.getContext('2d');
 
-        function registerServiceWorker() {
-            if ('serviceWorker' in navigator) {
-                const swCode = `
-                    self.addEventListener('install', (e) => { self.skipWaiting(); });
-                    self.addEventListener('activate', (e) => { e.waitUntil(self.clients.claim()); });
-                    self.addEventListener('fetch', (e) => { e.respondWith(fetch(e.request).catch(() => new Response('Offline'))); });
-                `;
-                const blob = new Blob([swCode], { type: 'application/javascript' });
-                navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(err => console.warn('SW failed:', err));
-            }
-        }
+  // Sharpen + contrast
+  cctx.filter = 'contrast(1.3) brightness(1.05)';
+  cctx.drawImage(video, sx, sy, sw, sh, 0, 0, capCanvas.width, capCanvas.height);
+  cctx.filter = 'none';
 
-        async function init() {
-            try {
-                elements.debugPanel.style.display = 'none';
-                elements.loadingStatus.textContent = 'Starting NEXUS AI...';
-                setProgress(5, 'Initializing system...');
-                debug('System initialization started', 'info');
-                
-                await initCamera(); setProgress(35, 'Camera ready');
-                setupCanvases(); setProgress(40, 'Rendering pipeline ready');
-                await loadModel(); setProgress(95, 'Calibrating neural networks...');
-                setupTouchHandlers(); setupButtons(); registerServiceWorker();
-                setProgress(100, 'SYSTEM ONLINE');
-                elements.loadingStatus.textContent = 'NEXUS AI Online';
-                debug('System online, starting main loop', 'info');
-                
-                setTimeout(() => {
-                    elements.loadingScreen.classList.add('hidden');
-                    setTimeout(() => elements.loadingScreen.remove(), 500);
-                }, 500);
-                state.lastFrameTime = performance.now();
-                updateTime(); requestAnimationFrame(mainLoop);
-            } catch (err) {
-                debug('Initialization error: ' + err.message, 'error');
-                elements.loadingStatus.textContent = 'Error: ' + err.message;
-                elements.loadingStatus.style.color = '#ff0044';
-            }
-        }
+  // Overlay info
+  cctx.font = 'bold 14px Orbitron, monospace';
+  cctx.fillStyle = '#00ff88';
+  cctx.fillText(`NEXUS EYE | ${t.label} | ${Math.round(t.score*100)}% | #${t.id}`, 8, 20);
+  cctx.fillText(new Date().toISOString(), 8, 38);
 
-        window.addEventListener('resize', () => {
-            const rect = elements.video.getBoundingClientRect();
-            state.displayWidth = rect.width; state.displayHeight = rect.height;
-            state.canvas.width = state.displayWidth; state.canvas.height = state.displayHeight;
-        });
+  // Download
+  const link = document.createElement('a');
+  link.download = `nexus_eye_${t.label}_${t.id}_${Date.now()}.png`;
+  link.href = capCanvas.toDataURL('image/png');
+  link.click();
 
-        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
-        else init();
-    })();
-    </script>
+  playPing(2400, 0.15);
+}
+
+// Manual capture of current zoomed view
+function manualCapture() {
+  initAudio();
+  const flash = document.getElementById('flash');
+  flash.classList.add('fire');
+  setTimeout(() => flash.classList.remove('fire'), 150);
+
+  const r = getVisibleRect();
+  const capCanvas = document.createElement('canvas');
+  capCanvas.width = Math.round(r.w); capCanvas.height = Math.round(r.h);
+  const cctx = capCanvas.getContext('2d');
+  cctx.filter = 'contrast(1.2) brightness(1.05)';
+  cctx.drawImage(video, r.x, r.y, r.w, r.h, 0, 0, capCanvas.width, capCanvas.height);
+  cctx.filter = 'none';
+
+  cctx.font = 'bold 16px Orbitron, monospace';
+  cctx.fillStyle = '#00ff88';
+  cctx.fillText(`NEXUS EYE | ZOOM ${zoomLevel.toFixed(1)}x`, 8, 24);
+  cctx.fillText(new Date().toISOString(), 8, 44);
+
+  const link = document.createElement('a');
+  link.download = `nexus_eye_capture_${Date.now()}.png`;
+  link.href = capCanvas.toDataURL('image/png');
+  link.click();
+
+  playPing(2000, 0.1);
+  showToast('FRAME CAPTURED');
+}
+
+// ---------- TOAST ----------
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 1500);
+}
+
+// ---------- HUD UPDATE ----------
+function updateHUD() {
+  document.getElementById('tgt-count').textContent = tracks.length;
+  const tl = document.getElementById('threat-level');
+  const tb = document.getElementById('threat-box');
+  if (tracks.length < 5) { tl.textContent = 'CLEAR'; tl.style.color = '#00ff88'; }
+  else if (tracks.length < 20) { tl.textContent = 'ALERT'; tl.style.color = '#ffaa00'; }
+  else if (tracks.length < 50) { tl.textContent = 'HIGH'; tl.style.color = '#ff6622'; }
+  else { tl.textContent = 'CRITICAL'; tl.style.color = '#ff2244'; }
+}
+
+// ---------- PINCH ZOOM ----------
+let lastPinchDist = 0;
+let isPinching = false;
+
+function handleTouchStart(e) {
+  if (e.touches.length === 2) {
+    isPinching = true;
+    const dx = e.touches[0].clientX - e.touches[1].clientX;
+    const dy = e.touches[0].clientY - e.touches[1].clientY;
+    lastPinchDist = Math.hypot(dx, dy);
+  } else if (e.touches.length === 1) {
+    // Check if tapping a bounding box
+    const tx = e.touches[0].clientX, ty = e.touches[0].clientY;
+    handleCanvasTap(tx, ty);
+  }
+}
+
+function handleTouchMove(e) {
+  if (!isPinching || e.touches.length !== 2) return;
+  e.preventDefault();
+  const dx = e.touches[0].clientX - e.touches[1].clientX;
+  const dy = e.touches[0].clientY - e.touches[1].clientY;
+  const dist = Math.hypot(dx, dy);
+  const scale = dist / lastPinchDist;
+  setZoom(zoomLevel * scale);
+  lastPinchDist = dist;
+}
+
+function handleTouchEnd() { isPinching = false; }
+
+function handleCanvasTap(cx, cy) {
+  // Check if tap hits a track
+  const r = getVisibleRect();
+  const vx = cx / mainCanvas.width * r.w + r.x;
+  const vy = cy / mainCanvas.height * r.h + r.y;
+
+  for (const t of tracks) {
+    if (vx >= t.x && vx <= t.x+t.w && vy >= t.y && vy <= t.y+t.h) {
+      autoZoomToTarget(t);
+      return;
+    }
+  }
+}
+
+// ---------- MAIN LOOP ----------
+async function mainLoop() {
+  if (!running) return;
+  const now = performance.now();
+
+  // FPS counter
+  fpsCounter++;
+  if (now - lastFpsTime > 1000) {
+    displayFps = fpsCounter;
+    fpsCounter = 0;
+    lastFpsTime = now;
+    document.getElementById('fps-val').textContent = displayFps;
+  }
+
+  // AI detection at configured interval
+  let aiDetections = [];
+  if (aiEnabled && now - lastDetectTime > CFG.detectionInterval) {
+    lastDetectTime = now;
+    aiDetections = await runAIDetection();
+  }
+
+  // Motion detection at higher rate
+  let motionDetections = [];
+  if (motionEnabled && now - lastMotionTime > CFG.motionInterval) {
+    lastMotionTime = now;
+    motionDetections = runMotionDetection();
+  }
+
+  // Merge detections (avoid duplicates from motion near AI detections)
+  const allDetections = [...aiDetections];
+  for (const md of motionDetections) {
+    let isDuplicate = false;
+    for (const ad of aiDetections) {
+      const overlapX = Math.max(0, Math.min(md.bbox[0]+md.bbox[2], ad.bbox[0]+ad.bbox[2]) - Math.max(md.bbox[0], ad.bbox[0]));
+      const overlapY = Math.max(0, Math.min(md.bbox[1]+md.bbox[3], ad.bbox[1]+ad.bbox[3]) - Math.max(md.bbox[1], ad.bbox[1]));
+      const overlapArea = overlapX * overlapY;
+      const mdArea = md.bbox[2] * md.bbox[3];
+      if (mdArea > 0 && overlapArea / mdArea > 0.5) { isDuplicate = true; break; }
+    }
+    if (!isDuplicate) allDetections.push(md);
+  }
+
+  // Update tracking
+  if (allDetections.length > 0) {
+    updateTracks(allDetections);
+  } else {
+    // Still fade out missed tracks
+    for (const t of tracks) {
+      t.missCount++;
+      t.opacity = Math.max(0, 1 - t.missCount / CFG.fadeOutFrames);
+    }
+    tracks = tracks.filter(t => t.missCount <= CFG.fadeOutFrames);
+  }
+
+  // Interpolate zoom
+  interpolateZoom();
+
+  // Render
+  drawFrame();
+
+  // Update PiP and HUD every few frames
+  if (fpsCounter % 4 === 0) {
+    updatePiPs();
+    updateHUD();
+  }
+
+  // Mark tracks as no longer new after first render
+  for (const t of tracks) t.isNew = false;
+
+  requestAnimationFrame(mainLoop);
+}
+
+// ---------- SETTINGS ----------
+function setupSettings() {
+  document.getElementById('btn-settings').onclick = () => {
+    document.getElementById('settings-modal').classList.add('open');
+  };
+  document.getElementById('btn-close-settings').onclick = () => {
+    document.getElementById('settings-modal').classList.remove('open');
+  };
+
+  document.getElementById('s-ai-thresh').oninput = function() { CFG.aiThreshold = parseFloat(this.value); };
+  document.getElementById('s-mot-thresh').oninput = function() { CFG.motionThreshold = parseInt(this.value); };
+  document.getElementById('s-min-blob').oninput = function() { CFG.minBlobArea = parseInt(this.value); };
+  document.getElementById('s-max-tgt').oninput = function() { CFG.maxTargets = parseInt(this.value); };
+  document.getElementById('s-smooth').onchange = function() { CFG.smoothAlpha = this.checked ? 0.3 : 0.9; };
+  document.getElementById('s-sound').onchange = function() { CFG.soundEnabled = this.checked; };
+  document.getElementById('s-scanlines').onchange = function() {
+    CFG.scanlines = this.checked;
+    document.getElementById('scanline').style.display = this.checked ? '' : 'none';
+    document.getElementById('sweep').style.display = this.checked ? '' : 'none';
+  };
+  document.getElementById('s-enhance').oninput = function() { CFG.enhanceContrast = parseFloat(this.value); };
+}
+
+// ---------- BUTTON HANDLERS ----------
+function setupButtons() {
+  document.getElementById('btn-ai').onclick = function() {
+    aiEnabled = !aiEnabled;
+    this.classList.toggle('active', aiEnabled);
+  };
+  document.getElementById('btn-motion').onclick = function() {
+    motionEnabled = !motionEnabled;
+    this.classList.toggle('active', motionEnabled);
+  };
+  document.getElementById('btn-capture').onclick = manualCapture;
+  document.getElementById('zoom-slider').oninput = function() {
+    setZoom(parseFloat(this.value), undefined, undefined, true);
+  };
+
+  // Touch events for pinch zoom on canvas
+  mainCanvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+  mainCanvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+  mainCanvas.addEventListener('touchend', handleTouchEnd);
+
+  // Mouse wheel zoom
+  mainCanvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    setZoom(zoomLevel * delta);
+  }, { passive: false });
+}
+
+// ---------- INIT ----------
+async function init() {
+  try {
+    initCanvases();
+    await initCamera();
+    await initModel();
+    setupButtons();
+    setupSettings();
+
+    // Hide loader
+    setTimeout(() => document.getElementById('loader').classList.add('hidden'), 600);
+
+    // Start main loop
+    requestAnimationFrame(mainLoop);
+  } catch(e) {
+    document.getElementById('load-status').textContent = 'FATAL: ' + e.message;
+  }
+}
+
+// Ensure audio context starts on user interaction
+document.addEventListener('click', initAudio, { once: true });
+document.addEventListener('touchstart', initAudio, { once: true });
+
+init();
+</script>
 </body>
 </html>
